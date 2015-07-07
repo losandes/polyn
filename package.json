@@ -1,10 +1,16 @@
 {
     "name": "polyn",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "polyn is a collection of Node and browser compatible JavaScript utilities that focus on polymorphism",
     "main": "index.js",
     "scripts": {
         "start": "node index",
         "test": "../build/grunt test"
+    },
+    "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/losandes/polyn.git"
     }
 }
