@@ -1,0 +1,27 @@
+{
+    "name": "polyn",
+    "main": "release/polyn.min.js",
+    "version": "0.0.3",
+    "homepage": "https://github.com/losandes/polyn",
+    "authors": [
+        "&y <andes.collab@gmail.com>"
+    ],
+    "description": "polyn is a collection of Node and browser compatible JavaScript utilities that focus on polymorphism",
+    "keywords": [
+        "polymorphism",
+        "interface",
+        "class",
+        "blueprint",
+        "hilary"
+    ],
+    "license": "MIT",
+    "ignore": [
+        "**/.*",
+        "npm-install-all.sh",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests",
+        "build"
+    ]
+}
