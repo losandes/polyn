@@ -96,17 +96,21 @@
         // validates blueprint properties that have additional details set, such as function arguments and decimal places
         */
         validatePropertyWithDetails = function (implementation, propertyName, propertyValue, type, errors) {
-            switch(type) {
-                case 'function':
-                    validatePropertyType(implementation, propertyName, type, errors);
-                    validateFunctionArguments(implementation, propertyName, propertyValue.args, errors);
-                    break;
-                case 'decimal':
-                    validateDecimalWithPlaces(implementation, propertyName, propertyValue.places, errors);
-                    break;
-                default:
-                    validatePropertyType(implementation, propertyName, type, errors);
-                    break;
+            if (is.function(propertyValue.validate)) {
+                propertyValue.validate(implementation[propertyName], errors);
+            } else {
+                switch(type) {
+                    case 'function':
+                        validatePropertyType(implementation, propertyName, type, errors);
+                        validateFunctionArguments(implementation, propertyName, propertyValue.args, errors);
+                        break;
+                    case 'decimal':
+                        validateDecimalWithPlaces(implementation, propertyName, propertyValue.places, errors);
+                        break;
+                    default:
+                        validatePropertyType(implementation, propertyName, type, errors);
+                        break;
+                }
             }
         };
         

@@ -50,3 +50,20 @@ IFoo.signatureMatches(foo, function (err, result) {
     // do something with foo
 });
 ```
+
+## Custom Validation
+You can override the Blueprint validation for any property by setting the value of that property to an object literal with a validation function on it.
+
+```JavaScript
+var ICustomFoo = new Blueprint({
+    meaningOfLife: {
+        validate: function (meaningOfLife, errorArray) {
+            if (meaningOfLife !== 42) {
+                errorArray.push('Sorry, that is not the answer to the meaning of life, the universe and everything');
+            }
+        }
+    }
+});
+```
+
+The validate function accepts two arguments. The first argument is the property on the implementation that matches the name of the property that is doing the validation. The second argument is the error array. If you push a message into the error array, it will be passed to the ``callback`` of the ``signatureMatches`` function, in the first parameter, and the result of ``signatureMatches`` will be ``false``. If your validation is truthy, take no action.

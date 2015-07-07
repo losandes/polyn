@@ -13,7 +13,7 @@ var Hilary = require('hilary'),
 // Orchestrates composition of the application dependency graph
 */
 compose = function (onReady) {
-    var polyn = require('polyn'),
+    var polyn = require('../../index.js'),
         IFooBlueprint = require('./IFooBlueprint.js'),
         foo = require('./foo.js');
 

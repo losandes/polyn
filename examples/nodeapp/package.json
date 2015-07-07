@@ -8,7 +8,6 @@
         "test": "../build/grunt test"
     },
     "dependencies": {
-        "hilary": "2.*",
-        "polyn": "*"
+        "hilary": "2.*"
     }
 }

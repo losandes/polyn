@@ -185,5 +185,52 @@ describe('Blueprint, ', function () {
         });
 
     });
+    
+    describe('when a Blueprint property is an object and has a validate function', function () {
+    
+        it('should execute the validate function instead of using the built in validation', function (done) {
+            // given
+            var bp = new Blueprint({
+                    prop: {
+                        validate: function (implementationProperty, errorArray) {
+                            // then
+                            expect(implementationProperty).to.equal(42);
+                            done();
+                        }
+                    }
+                }),
+                implementation = {
+                    prop: 42
+                };
+            
+            // when
+            bp.signatureMatches(implementation, function (err, result) {
+                /*ingore: we're making sure the validate function was actually called*/
+            });
+        });
+        
+        it('should allow the validate function to affect the signatureMatches result', function (done) {
+            // given
+            var errorMessage = 'error message',
+                bp = new Blueprint({
+                    prop: {
+                        validate: function (implementationProperty, errorArray) {
+                            // then
+                            errorArray.push(errorMessage);
+                        }
+                    }
+                }),
+                implementation = {
+                    prop: 42
+                };
+            
+            // when
+            bp.signatureMatches(implementation, function (err, result) {
+                expect(err[0]).to.equal(errorMessage);
+                done();
+            });
+        });
+        
+    });
 
 });

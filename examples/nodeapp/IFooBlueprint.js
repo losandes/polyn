@@ -1,6 +1,6 @@
 /*jslint node: true*/
 module.exports.name = 'IFooBlueprint';
-module.exports.dependencies = ['Blueprint'];
+module.exports.dependencies = ['polyn.Blueprint'];
 module.exports.factory = function (Blueprint) {
     'use strict';
     
