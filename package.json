@@ -1,6 +1,6 @@
 {
     "name": "polyn",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "description": "polyn is a collection of Node and browser compatible JavaScript utilities that focus on polymorphism",
     "main": "index.js",
     "scripts": {
