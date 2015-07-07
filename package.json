@@ -1,0 +1,10 @@
+{
+    "name": "polyn",
+    "version": "1.0.0",
+    "description": "polyn is a collection of Node and browser compatible JavaScript utilities that focus on polymorphism",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index",
+        "test": "../build/grunt test"
+    }
+}
