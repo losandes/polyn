@@ -4,8 +4,8 @@
     'use strict';
 
     var definition = {
-        name: 'Blueprint',
-        dependencies: ['utils', 'is', 'id'],
+        name: 'polyn.Blueprint',
+        dependencies: ['polyn.utils', 'polyn.is', 'polyn.id'],
         factory: undefined
     };
     

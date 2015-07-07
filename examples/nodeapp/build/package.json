@@ -1,0 +1,14 @@
+{
+    "name": "nodeapp-build",
+    "version": "1.0.0",
+    "description": "grunt build tasks for nodeapp",
+    "main": "gruntfile.js",
+    "scripts": {
+        "test": "grunt test"
+    },
+    "dependencies": {
+        "grunt": "*",
+        "grunt-mocha-test": "*",
+        "chai": "*"
+    }
+}

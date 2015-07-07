@@ -3,7 +3,7 @@
     'use strict';
 
     var definition = {
-        name: 'is',
+        name: 'polyn.is',
         dependencies: [],
         factory: undefined
     };

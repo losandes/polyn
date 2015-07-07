@@ -1,0 +1,9 @@
+{
+    "name": "nodeapp-tests",
+    "description": "mocha test fixtures for nodeapp",
+    "version": "0.0.1",
+    "dependencies": {
+        "chai": "*",
+        "hilary": "*"
+    }
+}

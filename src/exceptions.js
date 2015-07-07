@@ -3,8 +3,8 @@
     'use strict';
 
     var definition = {
-        name: 'exceptions',
-        dependencies: ['is'],
+        name: 'polyn.exceptions',
+        dependencies: ['polyn.is'],
         factory: undefined
     };
     
