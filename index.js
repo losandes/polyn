@@ -1,7 +1,7 @@
-module.exports = [
-    require('./src/Blueprint.js'),
-    require('./src/exceptions.js'),
-    require('./src/id.js'),
-    require('./src/is.js'),    
-    require('./src/utils.js')
-];
+module.exports = {
+    Blueprint: require('./src/Blueprint.js'),
+    exceptions: require('./src/exceptions.js'),
+    id: require('./src/id.js'),
+    is: require('./src/is.js'),
+    utils: require('./src/utils.js')    
+};
