@@ -56,6 +56,11 @@ You can override the Blueprint validation for any property by setting the value 
 
 ```JavaScript
 var ICustomFoo = new Blueprint({
+    name: 'string',
+    doSomething: {
+        type: 'function',
+        args: ['arg1', 'arg2']
+    },
     meaningOfLife: {
         validate: function (meaningOfLife, errorArray) {
             if (meaningOfLife !== 42) {
