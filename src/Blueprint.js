@@ -12,7 +12,9 @@
     definition.factory = function (utils, is, id) {
         var Blueprint,
             signatureMatches,
+            syncSignatureMatches,
             validateSignature,
+            syncValidateSignature,
             validateProperty,
             validatePropertyWithDetails,
             validatePropertyType,
@@ -54,17 +56,49 @@
         };
         
         /*
+        // wraps the callback and validates that the implementation matches the blueprint signature
+        */
+        syncSignatureMatches = function (implementation, blueprint) {
+            var validationResult;
+            
+            implementation.__interfaces = implementation.__interfaces || {};
+            validationResult = syncValidateSignature(implementation, blueprint);
+            
+            if (validationResult.result) {
+                implementation.__interfaces[blueprint.__blueprintId] = true;
+            }
+            
+            return validationResult;
+        };
+        
+        /*
         // validates that the implementation matches the blueprint signature
         // executes the callback with errors, if any, and a boolean value for the result
         */
         validateSignature = function (implementation, blueprint, callback) {
+            var validationResult = syncValidateSignature(implementation, blueprint);
+
+            if (validationResult.result) {
+                callback(null, true);
+            } else {
+                callback(validationResult.errors, false);
+            }
+        };
+        
+        /*
+        // validates that the implementation matches the blueprint signature
+        // executes the callback with errors, if any, and a boolean value for the result
+        */
+        syncValidateSignature = function (implementation, blueprint) {
             var errors = [],
                 prop;
             
             // if the implementation was already validated previously, skip validation
             if (implementation.__interfaces[blueprint.__blueprintId]) {
-                callback(null, true);
-                return;
+                return {
+                    errors: null,
+                    result: true
+                };
             }
             
             // validate each blueprint property
@@ -75,9 +109,15 @@
             }
 
             if (errors.length > 0) {
-                callback(errors, false);
+                return {
+                    errors: errors,
+                    result: false
+                };
             } else {
-                callback(null, true);
+                return {
+                    errors: null,
+                    result: true
+                };
             }
         };
         
@@ -198,6 +238,17 @@
                 utils.runAsync(function () {
                     signatureMatches(implementation, self, callback);
                 });
+            };
+            
+            self.syncSignatureMatches = function (implementation) {
+                if (is.not.defined(implementation)) {
+                    return {
+                        errors: [locale.errors.blueprint.missingSignatureMatchesImplementationArgument],
+                        result: false
+                    };
+                }
+                
+                return syncSignatureMatches(implementation, self);
             };
         };
         

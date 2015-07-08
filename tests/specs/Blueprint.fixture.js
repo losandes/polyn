@@ -232,5 +232,33 @@ describe('Blueprint, ', function () {
         });
         
     });
+    
+    describe('when the sync version of signatureMatches is used', function () {
+
+        it('should behave synchronously, with the same information that is available in the async signatureMatches', function () {
+            // given
+            var sut = sutSetup(),
+                actual,
+                obj = {
+                    num: 42,
+                    str: 'string',
+                    arr: [],
+                    currency: '42.42',
+                    bool: true,
+                    obj: {
+                        foo: 'bar'
+                    },
+                    func: function (arg1, arg2) {},
+                    dec: 42.42
+                };
+
+            // when
+            actual = sut.blueprint.syncSignatureMatches(obj);
+            
+            // then
+            expect(actual.result).to.equal(true);
+        });
+
+    });
 
 });

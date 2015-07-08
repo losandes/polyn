@@ -72,3 +72,32 @@ var ICustomFoo = new Blueprint({
 ```
 
 The validate function accepts two arguments. The first argument is the property on the implementation that matches the name of the property that is doing the validation. The second argument is the error array. If you push a message into the error array, it will be passed to the ``callback`` of the ``signatureMatches`` function, in the first parameter, and the result of ``signatureMatches`` will be ``false``. If your validation is truthy, take no action.
+
+## Synchronous validation
+Sometimes, async introduces complexity without real benefit. If you find yourself in that situation, you can use ``syncSignatureMatches``.
+
+```JavaScript
+var foo,
+    sigMatchResult;
+
+foo = {
+    num: 42,
+    str: 'string',
+    arr: [],
+    currency: '42.42',
+    bool: true,
+    date: new Date(),
+    regex: /[A-B]/,
+    obj: {
+        foo: 'bar'
+    },
+    func: function (arg1, arg2) {},
+    dec: 42.42
+};
+
+sigMatchResult = IFoo.syncSignatureMatches(foo);
+
+if (sigMatchResult.result !== true) {
+    console.log(sigMatchResult.errors);
+}
+```
