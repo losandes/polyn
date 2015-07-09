@@ -1,13 +1,13 @@
-/*! polyn-build 2015-07-06 */
+/*! polyn-build 2015-07-08 */
 (function(scope) {
     "use strict";
     var definition = {
-        name: "Blueprint",
-        dependencies: [ "utils", "is", "id" ],
+        name: "polyn.Blueprint",
+        dependencies: [ "polyn.utils", "polyn.is", "polyn.id" ],
         factory: undefined
     };
     definition.factory = function(utils, is, id) {
-        var Blueprint, signatureMatches, validateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, locale = {
+        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, locale = {
             errors: {
                 blueprint: {
                     requiresImplementation: "An implementation is required to create a new instance of an interface",
@@ -33,11 +33,30 @@
             };
             validateSignature(implementation, blueprint, newCallback);
         };
+        syncSignatureMatches = function(implementation, blueprint) {
+            var validationResult;
+            implementation.__interfaces = implementation.__interfaces || {};
+            validationResult = syncValidateSignature(implementation, blueprint);
+            if (validationResult.result) {
+                implementation.__interfaces[blueprint.__blueprintId] = true;
+            }
+            return validationResult;
+        };
         validateSignature = function(implementation, blueprint, callback) {
+            var validationResult = syncValidateSignature(implementation, blueprint);
+            if (validationResult.result) {
+                callback(null, true);
+            } else {
+                callback(validationResult.errors, false);
+            }
+        };
+        syncValidateSignature = function(implementation, blueprint) {
             var errors = [], prop;
             if (implementation.__interfaces[blueprint.__blueprintId]) {
-                callback(null, true);
-                return;
+                return {
+                    errors: null,
+                    result: true
+                };
             }
             for (prop in blueprint) {
                 if (blueprint.hasOwnProperty(prop) && prop !== "__blueprintId" && prop !== "signatureMatches") {
@@ -45,9 +64,15 @@
                 }
             }
             if (errors.length > 0) {
-                callback(errors, false);
+                return {
+                    errors: errors,
+                    result: false
+                };
             } else {
-                callback(null, true);
+                return {
+                    errors: null,
+                    result: true
+                };
             }
         };
         validateProperty = function(implementation, propertyName, propertyValue, errors) {
@@ -58,19 +83,23 @@
             }
         };
         validatePropertyWithDetails = function(implementation, propertyName, propertyValue, type, errors) {
-            switch (type) {
-              case "function":
-                validatePropertyType(implementation, propertyName, type, errors);
-                validateFunctionArguments(implementation, propertyName, propertyValue.args, errors);
-                break;
+            if (is.function(propertyValue.validate)) {
+                propertyValue.validate(implementation[propertyName], errors);
+            } else {
+                switch (type) {
+                  case "function":
+                    validatePropertyType(implementation, propertyName, type, errors);
+                    validateFunctionArguments(implementation, propertyName, propertyValue.args, errors);
+                    break;
 
-              case "decimal":
-                validateDecimalWithPlaces(implementation, propertyName, propertyValue.places, errors);
-                break;
+                  case "decimal":
+                    validateDecimalWithPlaces(implementation, propertyName, propertyValue.places, errors);
+                    break;
 
-              default:
-                validatePropertyType(implementation, propertyName, type, errors);
-                break;
+                  default:
+                    validatePropertyType(implementation, propertyName, type, errors);
+                    break;
+                }
             }
         };
         validatePropertyType = function(implementation, propertyName, propertyType, errors) {
@@ -126,6 +155,15 @@
                     signatureMatches(implementation, self, callback);
                 });
             };
+            self.syncSignatureMatches = function(implementation) {
+                if (is.not.defined(implementation)) {
+                    return {
+                        errors: [ locale.errors.blueprint.missingSignatureMatchesImplementationArgument ],
+                        result: false
+                    };
+                }
+                return syncSignatureMatches(implementation, self);
+            };
         };
         return Blueprint;
     };
@@ -143,8 +181,8 @@
 (function(scope) {
     "use strict";
     var definition = {
-        name: "exceptions",
-        dependencies: [ "is" ],
+        name: "polyn.exceptions",
+        dependencies: [ "polyn.is" ],
         factory: undefined
     };
     definition.factory = function(is) {
@@ -205,7 +243,7 @@
 (function(scope) {
     "use strict";
     var definition = {
-        name: "id",
+        name: "polyn.id",
         dependencies: [],
         factory: undefined
     };
@@ -245,7 +283,7 @@
 (function(scope) {
     "use strict";
     var definition = {
-        name: "is",
+        name: "polyn.is",
         dependencies: [],
         factory: undefined
     };
@@ -408,8 +446,8 @@
 (function(scope) {
     "use strict";
     var definition = {
-        name: "utils",
-        dependencies: [ "is" ],
+        name: "polyn.utils",
+        dependencies: [ "polyn.is" ],
         factory: undefined
     };
     definition.factory = function(is) {

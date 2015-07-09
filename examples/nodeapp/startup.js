@@ -5,6 +5,7 @@
 // The entire app can be restarted from within, to react to failure, and to
 // get into a clean running state when associated services recover from failure.
 var Hilary = require('hilary'),
+    hilaryPolyn = require('./hilary.polyn.js'),
     scope,
     compose,
     start;
@@ -12,7 +13,7 @@ var Hilary = require('hilary'),
 /*
 // Orchestrates composition of the application dependency graph
 */
-compose = function (onReady) {
+compose = function () {
     var polyn = require('../../index.js'),
         IFooBlueprint = require('./IFooBlueprint.js'),
         foo = require('./foo.js');
@@ -21,22 +22,7 @@ compose = function (onReady) {
     scope.register(IFooBlueprint);
     scope.register(foo);
 
-    scope.resolve('IFooBlueprint').signatureMatches(scope.resolve('foo'), function (err, result) {
-        if (err) {
-            console.error(err);
-        } else {
-            console.log('foo implements IFooBlueprint: ', result);
-            
-            scope.register({
-                name: 'IFoo',
-                factory: function () {
-                    return scope.resolve('foo');
-                }
-            });
-            
-            onReady();
-        }
-    });
+    scope.registerBlueprint('IFoo', 'IFooBlueprint', 'foo');
     
 };
 
@@ -44,15 +30,16 @@ compose = function (onReady) {
 // Orchestrates startup
 */
 start = function () {
+    hilaryPolyn.usePolyn(Hilary);
     scope = Hilary.scope('polyn-example');
 
     console.log('startup::@' + new Date().toISOString());
     console.log('startup::composing application');
 
     // compose the application dependency graph
-    compose(function () {
-        console.log(scope.resolve('IFoo'));
-    });
+    compose();
+    
+    console.log(scope.resolve('IFoo'));
 };
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!

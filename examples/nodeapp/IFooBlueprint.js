@@ -4,10 +4,7 @@ module.exports.dependencies = ['polyn.Blueprint'];
 module.exports.factory = function (Blueprint) {
     'use strict';
     
-    var IFoo = {
-            signatureMatches: undefined
-        },
-        blueprint;
+    var blueprint;
     
     blueprint = new Blueprint({
         num: 'number',
@@ -28,11 +25,5 @@ module.exports.factory = function (Blueprint) {
         }
     });
     
-    IFoo.signatureMatches = function (implementation, callback) {
-        blueprint.signatureMatches(implementation, function (err, result) {
-            callback(err, result);
-        });
-    };
-    
-    return IFoo;
+    return blueprint;
 };
