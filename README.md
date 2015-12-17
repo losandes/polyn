@@ -1,4 +1,4 @@
-NO LONGER MAINTAINED: These features are now managed directly in hilary
+NOT CURRENTLY MAINTAINED: All existing features were moved directly into [hilary](https://github.com/losandes/hilaryjs)
 
 # polyn
 polyn is a collection of Node and browser compatible JavaScript utilities that focus on polymorphism. polyn is designed to be used with [hilary](https://github.com/Acatar/hilaryjs).
