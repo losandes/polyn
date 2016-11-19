@@ -334,12 +334,16 @@
 
             setReadOnlyProp(self, 'props', props);
 
+            setReadOnlyProp(self, 'validate', function (implementation, callback) {
+                return Blueprint.validate(self, implementation, callback);
+            });
+
             setReadOnlyProp(self, 'signatureMatches', function (implementation, callback) {
-                return Blueprint.signaturesMatch(self, implementation, callback);
+                return Blueprint.validate(self, implementation, callback);
             });
 
             setReadOnlyProp(self, 'syncSignatureMatches', function (implementation) {
-                return Blueprint.syncSignaturesMatch(self, implementation);
+                return Blueprint.syncValidate(self, implementation);
             });
 
             setReadOnlyProp(self, 'inherits', function (otherBlueprint) {
@@ -349,7 +353,11 @@
             return self;
         };
 
-        Blueprint.signaturesMatch = function (blueprint, implementation, callback) {
+        Blueprint.validate = function (blueprint, implementation, callback) {
+            if (is.not.function(callback)) {
+                return Blueprint.syncValidate(blueprint, implementation);
+            }
+
             if (is.not.defined(blueprint)) {
                 callback([locale.errors.blueprint.missingSignaturesMatchBlueprintArgument]);
                 return;
@@ -360,16 +368,12 @@
                 return;
             }
 
-            if (is.not.function(callback)) {
-                throw new Error(locale.errors.blueprint.missingSignaturesMatchCallbackArgument);
-            }
-
             async.runAsync(function () {
                 signatureMatches(implementation, blueprint, callback);
             });
         };
 
-        Blueprint.syncSignaturesMatch = function (blueprint, implementation) {
+        Blueprint.syncValidate = function (blueprint, implementation) {
             if (is.not.defined(blueprint)) {
                 return {
                     errors: [locale.errors.blueprint.missingSignaturesMatchBlueprintArgument],
@@ -388,6 +392,10 @@
         };
 
         Blueprint.merge = function (blueprints, callback) {
+            if (typeof callback !== 'function') {
+                return Blueprint.syncMerge(blueprints);
+            }
+
             async.runAsync(function () {
                 callback(null, Blueprint.syncMerge(blueprints));
             });

@@ -1,7 +1,7 @@
 {
     "name": "polyn",
     "main": "release/polyn.min.js",
-    "version": "0.0.3",
+    "version": "1.0.0",
     "homepage": "https://github.com/losandes/polyn",
     "authors": [
         "&y <andes.collab@gmail.com>"
@@ -16,12 +16,11 @@
     ],
     "license": "MIT",
     "ignore": [
-        "**/.*",
-        "npm-install-all.sh",
-        "node_modules",
         "bower_components",
-        "test",
+        "build-tasks",
+        "node_modules",
+        "src",
         "tests",
-        "build"
+        "index.js"
     ]
 }

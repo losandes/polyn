@@ -69,7 +69,7 @@
                 });
             });
 
-            describe('signaturesMatch', function () {
+            describe('asynchronous validation', function () {
                 describe('when an object that implements a given Blueprint is validated', function () {
                     var sut = sutSetup(),
                         implementation = {
@@ -90,7 +90,7 @@
 
                     it('should pass TRUE in as the second argument to the callback', function (done) {
                         // when
-                        Blueprint.signaturesMatch(sut, implementation, function (err, result) {
+                        Blueprint.validate(sut, implementation, function (err, result) {
                             // then
                             expect(result).to.equal(true);
                             done();
@@ -126,7 +126,7 @@
 
                         it('should pass TRUE in as the second argument to the callback', function (done) {
                             // when
-                            Blueprint.signaturesMatch(sut, implementation, function (err, result) {
+                            Blueprint.validate(sut, implementation, function (err, result) {
                                 // then
                                 expect(result).to.equal(true);
                                 done();
@@ -162,7 +162,7 @@
 
                     it('should pass FALSE in as the second argument to the callback', function (done) {
                         // when
-                        Blueprint.signaturesMatch(sut, implementation, function (err, result) {
+                        Blueprint.validate(sut, implementation, function (err, result) {
                             // then
                             expect(result).to.equal(false);
                             done();
@@ -180,7 +180,7 @@
 
                     it('should pass an array of errors as the first argument to the callback', function (done) {
                         // when
-                        Blueprint.signaturesMatch(sut, implementation, function (err) {
+                        Blueprint.validate(sut, implementation, function (err) {
                             // then
                             expect(is.array(err)).to.equal(true);
                             expect(err.length).to.be.at.least(5);
@@ -200,7 +200,7 @@
 
                     it('should pass an array of errors as the first argument to the callback', function (done) {
                         // when
-                        Blueprint.signaturesMatch(sut, implementation2, function (err) {
+                        Blueprint.validate(sut, implementation2, function (err) {
                             // then
                             expect(is.array(err)).to.equal(true);
                             // there should be an error that a function is missing
@@ -252,7 +252,7 @@
 
                     it('should receive three arguments', function (done) {
                         // when
-                        Blueprint.signaturesMatch(validSut, implementation, function (err, result) {
+                        Blueprint.validate(validSut, implementation, function (err, result) {
                             // then
                             expect(result).to.equal(true);
                             done();
@@ -270,7 +270,7 @@
 
                     it('should execute the validate function instead of using the built in validation', function (done) {
                         // when
-                        Blueprint.signaturesMatch(invalidSut, implementation, function (err, result) {
+                        Blueprint.validate(invalidSut, implementation, function (err, result) {
                             // then
                             expect(err[0]).to.equal(expectedValidationErrorMessage);
                             expect(result).to.equal(false);
@@ -303,7 +303,7 @@
 
                     it('should require the property to have a value', function (done) {
                         // when
-                        Blueprint.signaturesMatch(sut, implementation, function (err, result) {
+                        Blueprint.validate(sut, implementation, function (err, result) {
                             // then
                             expect(result).to.equal(false);
                             done();
@@ -334,7 +334,7 @@
 
                     it('should NOT require the property to have a value', function (done) {
                         // when
-                        Blueprint.signaturesMatch(sut, implementation, function (err, result) {
+                        Blueprint.validate(sut, implementation, function (err, result) {
                             // then
                             expect(result).to.equal(true);
                             done();
@@ -352,7 +352,7 @@
                 });
             });
 
-            describe('syncSignaturesMatch', function () {
+            describe('synchronous validation', function () {
                 describe('when an object that implements a given Blueprint is validated', function () {
                     var sut = sutSetup(),
                         implementation = {
@@ -373,7 +373,7 @@
 
                     it('should return TRUE for the `result` property', function () {
                         // when
-                        var actual = Blueprint.syncSignaturesMatch(sut, implementation);
+                        var actual = Blueprint.validate(sut, implementation);
 
                         // then
                         expect(actual.result).to.equal(true);
@@ -407,7 +407,7 @@
 
                         it('should return TRUE for the `result` property', function () {
                             // when
-                            var actual = Blueprint.syncSignaturesMatch(sut, implementation);
+                            var actual = Blueprint.validate(sut, implementation);
 
                             // then
                             expect(actual.result).to.equal(true);
@@ -441,7 +441,7 @@
 
                     it('should return TRUE for the `result` property', function () {
                         // when
-                        var actual = Blueprint.syncSignaturesMatch(sut, implementation);
+                        var actual = Blueprint.validate(sut, implementation);
                         // then
                         expect(actual.result).to.equal(false);
                     });
@@ -455,7 +455,7 @@
 
                     it('should return an array of errors', function () {
                         // when
-                        var actual = Blueprint.syncSignaturesMatch(sut, implementation);
+                        var actual = Blueprint.validate(sut, implementation);
                         // then
                         expect(is.array(actual.errors)).to.equal(true);
                         expect(actual.errors.length).to.be.at.least(5);
@@ -471,7 +471,7 @@
 
                     it('should return an array of errors', function () {
                         // when
-                        var actual = Blueprint.syncSignaturesMatch(sut, implementation2);
+                        var actual = Blueprint.validate(sut, implementation2);
                         // then
                         expect(is.array(actual.errors)).to.equal(true);
                         // there should be an error that a function is missing
@@ -519,7 +519,7 @@
 
                     it('should receive three arguments', function () {
                         // when
-                        var actual = Blueprint.syncSignaturesMatch(validSut, implementation);
+                        var actual = Blueprint.validate(validSut, implementation);
                         // then
                         expect(actual.result).to.equal(true);
                     });
@@ -533,7 +533,7 @@
 
                     it('should execute the validate function instead of using the built in validation', function () {
                         // when
-                        var actual = Blueprint.syncSignaturesMatch(invalidSut, implementation);
+                        var actual = Blueprint.validate(invalidSut, implementation);
                         // then
                         expect(actual.errors[0]).to.equal(expectedValidationErrorMessage);
                         expect(actual.result).to.equal(false);
@@ -562,7 +562,7 @@
 
                     it('should require the property to have a value', function () {
                         // when
-                        var actual = Blueprint.syncSignaturesMatch(sut, implementation);
+                        var actual = Blueprint.validate(sut, implementation);
                         // then
                         expect(actual.result).to.equal(false);
                     });
@@ -589,7 +589,7 @@
 
                     it('should NOT require the property to have a value', function () {
                         // when
-                        var actual = Blueprint.syncSignaturesMatch(sut, implementation);
+                        var actual = Blueprint.validate(sut, implementation);
                         // then
                         expect(actual.result).to.equal(true);
                     });
