@@ -8,7 +8,8 @@ module.exports = function (grunt) {
             './src/id.js',
             './src/is.js',
             './src/Exception.js',
-            './src/Blueprint.js'
+            './src/Blueprint.js',
+            './src/Immutable.js'
         ],
         output = {
             './release/polyn.js': files

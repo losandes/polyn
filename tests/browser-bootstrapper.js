@@ -11,7 +11,9 @@
         Exception = polyn.Exception,
         ExceptionFixture = fixtures.Exception,
         Blueprint = polyn.Blueprint,
-        BlueprintFixture = fixtures.Blueprint;
+        BlueprintFixture = fixtures.Blueprint,
+        Immutable = polyn.Immutable,
+        ImmutableFixture = fixtures.Immutable;
 
     // globals: describe, it, xit, before, after
 
@@ -20,5 +22,6 @@
     asyncFixture.run(async, describe, it);
     ExceptionFixture.run(Exception, describe, it, chai.expect);
     BlueprintFixture.run(Blueprint, id, is, describe, it, chai.expect);
-    
+    ImmutableFixture.run(Immutable, describe, it, chai.expect);
+
 }(window.polyn, window.fixtures));

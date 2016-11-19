@@ -617,3 +617,161 @@
         return Blueprint;
     }
 })();
+
+(function() {
+    "use strict";
+    var Immutable;
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = Ctor(require("./Blueprint.js"), require("./Exception.js"));
+    } else if (window) {
+        if (!window.polyn || !window.polyn.Blueprint || !window.polyn.Exception) {
+            return console.log("Unable to define module: LOADED OUT OF ORDER");
+        }
+        Immutable = Ctor(window.polyn.Blueprint, window.polyn.Exception);
+        Object.defineProperty(window.polyn, "Immutable", {
+            get: function() {
+                return Immutable;
+            },
+            set: function() {
+                var err = new Error("[POLYN] polyn modules are read-only");
+                console.log(err);
+                return err;
+            },
+            enumerable: true,
+            configurable: false
+        });
+    } else {
+        console.log("Unable to define module: UNKNOWN RUNTIME");
+    }
+    function Ctor(Blueprint, Exception) {
+        var config = {
+            onError: function(exception) {
+                console.log(exception);
+            }
+        };
+        function Immutable(schema) {
+            var blueprint;
+            if (!schema) {
+                return new InvalidArgumentException(new Error("A schema object, and values are required"));
+            }
+            blueprint = new Blueprint(schema);
+            function Constructor(values) {
+                var propName, internal = {}, self = {};
+                values = values || {};
+                if (schema.__skipValdation !== true && !blueprint.syncSignatureMatches(values).result) {
+                    return new InvalidArgumentException(new Error("The argument passed to the constructor is not valid"), blueprint.syncSignatureMatches(values).errors);
+                }
+                try {
+                    for (propName in schema) {
+                        if (schema.hasOwnProperty(propName) && typeof values[propName] !== "undefined") {
+                            makeImmutableProperty(self, internal, schema, values, propName);
+                        } else if (schema.hasOwnProperty(propName)) {
+                            makeReadOnlyNullProperty(self, propName);
+                        }
+                    }
+                } catch (e) {
+                    return new InvalidArgumentException(e);
+                }
+                return self;
+            }
+            Constructor.merge = function(from, mergeVals) {
+                return new Constructor(merge(from, mergeVals));
+            };
+            Constructor.toObject = function(from) {
+                return toObject(from, {});
+            };
+            Constructor.validate = function(instance) {
+                return blueprint.syncSignatureMatches(instance);
+            };
+            Constructor.log = function(instance) {
+                if (!instance) {
+                    console.log(null);
+                } else {
+                    console.log(Constructor.toObject(instance));
+                }
+            };
+            Constructor.__immutableCtor = true;
+            return Constructor;
+        }
+        function makeImmutableProperty(self, internal, schema, values, propName) {
+            if (typeof schema[propName] && schema[propName].__immutableCtor) {
+                internal[propName] = new schema[propName](values[propName]);
+            } else {
+                internal[propName] = copyValue(values[propName]);
+            }
+            Object.defineProperty(self, propName, {
+                get: function() {
+                    return internal[propName];
+                },
+                set: function() {
+                    var err = new Exception("ReadOnlyViolation", new Error("Cannot set `" + propName + "`. This object is immutable"));
+                    config.onError(err);
+                    return err;
+                },
+                enumerable: true,
+                configurable: false
+            });
+        }
+        function makeReadOnlyNullProperty(self, propName) {
+            Object.defineProperty(self, propName, {
+                get: function() {
+                    return null;
+                },
+                set: function() {
+                    var err = new Exception("ReadOnlyViolation", new Error("Cannot set `" + propName + "`. This object is immutable"));
+                    config.onError(err);
+                    return err;
+                },
+                enumerable: true,
+                configurable: false
+            });
+        }
+        function copyValue(val) {
+            if (!val) {
+                return val;
+            }
+            if (typeof val === "object" && Object.prototype.toString.call(val) === "[object Date]") {
+                return new Date(val);
+            } else if (typeof val === "object") {
+                return JSON.parse(JSON.stringify(val));
+            } else {
+                return JSON.parse(JSON.stringify(val));
+            }
+        }
+        function InvalidArgumentException(error, messages) {
+            return new Exception("InvalidArgumentException", error, messages);
+        }
+        function merge(from, mergeVals) {
+            var newVals = toObject(from, false), propName;
+            for (propName in mergeVals) {
+                if (mergeVals.hasOwnProperty(propName) && typeof mergeVals[propName] === "object") {
+                    newVals[propName] = merge(newVals[propName], mergeVals[propName]);
+                } else if (mergeVals.hasOwnProperty(propName)) {
+                    newVals[propName] = mergeVals[propName];
+                }
+            }
+            return newVals;
+        }
+        function toObject(from, deep) {
+            var newVals = {}, propName;
+            if (typeof deep === "undefined") {
+                deep = true;
+            }
+            for (propName in from) {
+                if (from.hasOwnProperty(propName) && typeof from[propName] === "object" && deep) {
+                    newVals[propName] = toObject(from[propName]);
+                } else if (from.hasOwnProperty(propName)) {
+                    newVals[propName] = copyValue(from[propName]);
+                }
+            }
+            return newVals;
+        }
+        Immutable.configure = function(cfg) {
+            cfg = cfg || {};
+            if (typeof cfg.onError === "function") {
+                config.onError = cfg.onError;
+            }
+        };
+        return Immutable;
+    }
+})();

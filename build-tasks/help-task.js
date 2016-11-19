@@ -49,7 +49,7 @@ module.exports = function (grunt) {
         console.log('');
 
         printHeader('Build Commands');
-        printDefinition('grunt build', 'Uglifies the source into the release folder');
+        printDefinition('grunt build', 'Tests the code, then uglifies the source into the release folder');
         console.log('');
     });
 };

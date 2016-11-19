@@ -20,6 +20,7 @@ module.exports = function (grunt) {
                 'tests/specs/Blueprint.fixture.js',
                 'tests/specs/Exception.fixture.js',
                 'tests/specs/id.fixture.js',
+                'tests/specs/Immutable.fixture.js',
                 'tests/specs/is.fixture.js',
                 // runner
                 'tests/browser-bootstrapper.js'

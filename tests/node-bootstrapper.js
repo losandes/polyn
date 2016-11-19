@@ -9,7 +9,9 @@ var chai = require('chai'),
     Exception = require('../src/Exception.js'),
     ExceptionFixture = require('./specs/Exception.fixture.js'),
     Blueprint = require('../src/Blueprint.js'),
-    BlueprintFixture = require('./specs/Blueprint.fixture.js');
+    BlueprintFixture = require('./specs/Blueprint.fixture.js'),
+    Immutable = require('../src/Immutable.js'),
+    ImmutableFixture = require('./specs/Immutable.fixture.js');
 
 // globals: describe, it, xit, before, after
 
@@ -18,3 +20,4 @@ idFixture.run(id, describe, it, chai.expect);
 asyncFixture.run(async, describe, it);
 ExceptionFixture.run(Exception, describe, it, chai.expect);
 BlueprintFixture.run(Blueprint, id, is, describe, it, chai.expect);
+ImmutableFixture.run(Immutable, describe, it, chai.expect);

@@ -13,11 +13,11 @@ module.exports = function (grunt) {
     // Default task(s).
     grunt.registerTask('default', ['help']);
 
-    grunt.registerTask('test', ['mochaTest:main', 'karma:unit_' + os]);
+    grunt.registerTask('test', ['build', 'mochaTest:main', 'karma:unit_' + os]);
     grunt.registerTask('test-node', ['mochaTest:main']);
-    grunt.registerTask('test-browser', ['karma:unit_' + os]);
-    grunt.registerTask('debug', ['karma:debug_' + os]);
-    grunt.registerTask('debug-browser', ['karma:debug_' + os]);
+    grunt.registerTask('test-browser', ['build', 'karma:unit_' + os]);
+    grunt.registerTask('debug', ['build', 'karma:debug_' + os]);
+    grunt.registerTask('debug-browser', ['build', 'karma:debug_' + os]);
 
-    grunt.registerTask('build', ['test', 'uglify:debug', 'uglify:release']);
+    grunt.registerTask('build', ['uglify:debug', 'uglify:release']);
 };

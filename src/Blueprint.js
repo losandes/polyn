@@ -7,7 +7,12 @@
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = Ctor(require('./async.js'), require('./id.js'), require('./is.js'), require('./Exception.js'));
+        module.exports = Ctor(
+            require('./async.js'),
+            require('./id.js'),
+            require('./is.js'),
+            require('./Exception.js')
+        );
     } else if (window) {
         if (
             !window.polyn ||
@@ -19,7 +24,12 @@
             return console.log('Unable to define module: LOADED OUT OF ORDER');
         }
 
-        bp = Ctor(window.polyn.async, window.polyn.id, window.polyn.is, window.polyn.Exception);
+        bp = Ctor(
+            window.polyn.async,
+            window.polyn.id,
+            window.polyn.is,
+            window.polyn.Exception
+        );
 
         Object.defineProperty(window.polyn, 'Blueprint', {
             get: function () {
