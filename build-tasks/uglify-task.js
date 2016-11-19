@@ -2,13 +2,28 @@
 module.exports = function (grunt) {
     'use strict';
 
+    var banner = '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+        files = [
+            './src/async.js',
+            './src/id.js',
+            './src/is.js',
+            './src/Exception.js',
+            './src/Blueprint.js'
+        ],
+        output = {
+            './release/polyn.js': files
+        },
+        outputMinified = {
+            './release/polyn.min.js': files
+        };
+
     grunt.loadNpmTasks('grunt-contrib-uglify'); // node
 
     // Update the grunt config
     grunt.config.set('uglify', {
         debug: {
             options: {
-                banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+                banner: banner,
                 beautify: true,
                 mangle: false,
                 compress: false,
@@ -16,21 +31,17 @@ module.exports = function (grunt) {
                 drop_console: false,
                 preserveComments: 'some'
             },
-            files: {
-                '../release/polyn.js': ['../src/Blueprint.js', '../src/exceptions.js', '../src/id.js', '../src/is.js', '../src/utils.js']
-            }
+            files: output
         },
         release: {
             options: {
-                banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-                    //                    mangle: true,
-                    //                    compress: true,
-                    //                    sourceMap: true,
-                    //                    drop_console: true
+                banner: banner
+                // mangle: true,
+                // compress: true,
+                // sourceMap: true,
+                // drop_console: true
             },
-            files: {
-                '../release/polyn.min.js': ['../src/Blueprint.js', '../src/exceptions.js', '../src/id.js', '../src/is.js', '../src/utils.js']
-            }
+            files: outputMinified
         }
     });
 };

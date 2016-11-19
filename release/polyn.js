@@ -1,31 +1,387 @@
-/*! polyn-build 2015-07-09 */
-(function(scope) {
+/*! polyn 2016-11-19 */
+(function() {
     "use strict";
-    var definition = {
-        name: "polyn.Blueprint",
-        dependencies: [ "polyn.utils", "polyn.is", "polyn.id" ],
-        factory: undefined
-    };
-    definition.factory = function(utils, is, id) {
-        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, locale = {
+    var async = Async();
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = async;
+    } else if (window) {
+        window.polyn = window.polyn || {};
+        Object.defineProperty(window.polyn, "async", {
+            get: function() {
+                return async;
+            },
+            set: function() {
+                var err = new Error("[POLYN] polyn modules are read-only");
+                console.log(err);
+                return err;
+            },
+            enumerable: true,
+            configurable: false
+        });
+    } else {
+        console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
+    }
+    function Async() {
+        var async = {
+            runAsync: undefined
+        };
+        async.runAsync = function(func, highPriority) {
+            if (highPriority === true && typeof process !== "undefined" && typeof process.nextTick === "function") {
+                process.nextTick(func);
+            } else {
+                setTimeout(func, 0);
+            }
+        };
+        return async;
+    }
+})();
+
+(function() {
+    "use strict";
+    var id = Id();
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = id;
+    } else if (window) {
+        window.polyn = window.polyn || {};
+        Object.defineProperty(window.polyn, "id", {
+            get: function() {
+                return id;
+            },
+            set: function() {
+                var err = new Error("[POLYN] polyn modules are read-only");
+                console.log(err);
+                return err;
+            },
+            enumerable: true,
+            configurable: false
+        });
+    } else {
+        console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
+    }
+    function Id() {
+        var id = {
+            createUid: undefined,
+            createGuid: undefined
+        }, createRandomString;
+        createRandomString = function(templateString) {
+            return templateString.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === "x" ? r : r & 3 | 8;
+                return v.toString(16);
+            });
+        };
+        id.createUid = function(length) {
+            var template;
+            length = length || 12;
+            template = new Array(length + 1).join("x");
+            return createRandomString(template);
+        };
+        id.createGuid = function() {
+            return createRandomString("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx");
+        };
+        return id;
+    }
+})();
+
+(function() {
+    "use strict";
+    var is = Is();
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = is;
+    } else if (window) {
+        window.polyn = window.polyn || {};
+        Object.defineProperty(window.polyn, "is", {
+            get: function() {
+                return is;
+            },
+            set: function() {
+                var err = new Error("[POLYN] polyn modules are read-only");
+                console.log(err);
+                return err;
+            },
+            enumerable: true,
+            configurable: false
+        });
+    } else {
+        console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
+    }
+    function Is() {
+        var is = {
+            getType: undefined,
+            defined: undefined,
+            nullOrUndefined: undefined,
+            function: undefined,
+            object: undefined,
+            array: undefined,
+            string: undefined,
+            bool: undefined,
+            boolean: undefined,
+            date: undefined,
+            datetime: undefined,
+            regexp: undefined,
+            number: undefined,
+            nullOrWhitespace: undefined,
+            money: undefined,
+            decimal: undefined,
+            Window: undefined,
+            not: {
+                defined: undefined,
+                function: undefined,
+                object: undefined,
+                array: undefined,
+                string: undefined,
+                bool: undefined,
+                boolean: undefined,
+                date: undefined,
+                datetime: undefined,
+                regexp: undefined,
+                number: undefined,
+                nullOrWhitespace: undefined,
+                money: undefined,
+                decimal: undefined,
+                Window: undefined
+            }
+        }, class2Types = {}, class2ObjTypes = [ "Boolean", "Number", "String", "Function", "Array", "Date", "RegExp", "Object" ], i, name;
+        for (i = 0; i < class2ObjTypes.length; i += 1) {
+            name = class2ObjTypes[i];
+            class2Types["[object " + name + "]"] = name.toLowerCase();
+        }
+        is.getType = function(obj) {
+            if (typeof obj === "undefined") {
+                return "undefined";
+            }
+            if (obj === null) {
+                return String(obj);
+            }
+            return typeof obj === "object" || typeof obj === "function" ? class2Types[Object.prototype.toString.call(obj)] || "object" : typeof obj;
+        };
+        is.defined = function(obj) {
+            try {
+                return is.getType(obj) !== "undefined";
+            } catch (e) {
+                return false;
+            }
+        };
+        is.not.defined = function(obj) {
+            return is.defined(obj) === false;
+        };
+        is.nullOrUndefined = function(obj) {
+            return is.not.defined(obj) || obj === null;
+        };
+        is.not.nullOrWhitespace = function(str) {
+            if (typeof str === "undefined" || typeof str === null || is.not.string(str)) {
+                return false;
+            }
+            return /([^\s])/.test(str);
+        };
+        is.nullOrWhitespace = function(str) {
+            return is.not.nullOrWhitespace(str) === false;
+        };
+        is.function = function(obj) {
+            return is.getType(obj) === "function";
+        };
+        is.not.function = function(obj) {
+            return is.function(obj) === false;
+        };
+        is.object = function(obj) {
+            return is.getType(obj) === "object";
+        };
+        is.not.object = function(obj) {
+            return is.object(obj) === false;
+        };
+        is.array = function(obj) {
+            return is.getType(obj) === "array";
+        };
+        is.not.array = function(obj) {
+            return is.array(obj) === false;
+        };
+        is.string = function(obj) {
+            return is.getType(obj) === "string";
+        };
+        is.not.string = function(obj) {
+            return is.string(obj) === false;
+        };
+        is.bool = function(obj) {
+            return is.getType(obj) === "boolean";
+        };
+        is.not.bool = function(obj) {
+            return is.boolean(obj) === false;
+        };
+        is.boolean = function(obj) {
+            return is.getType(obj) === "boolean";
+        };
+        is.not.boolean = function(obj) {
+            return is.boolean(obj) === false;
+        };
+        is.datetime = function(obj) {
+            return is.getType(obj) === "date" && !isNaN(obj.getTime());
+        };
+        is.not.datetime = function(obj) {
+            return is.datetime(obj) === false;
+        };
+        is.date = is.datetime;
+        is.not.date = is.not.datetime;
+        is.regexp = function(obj) {
+            return is.getType(obj) === "regexp";
+        };
+        is.not.regexp = function(obj) {
+            return is.regexp(obj) === false;
+        };
+        is.number = function(obj) {
+            return is.getType(obj) === "number";
+        };
+        is.not.number = function(obj) {
+            return is.number(obj) === false;
+        };
+        is.money = function(val) {
+            return is.defined(val) && /^(?:-)?[0-9]\d*(?:\.\d{0,2})?$/.test(val.toString());
+        };
+        is.not.money = function(val) {
+            return is.money(val) === false;
+        };
+        is.decimal = function(num, places) {
+            if (is.not.number(num)) {
+                return false;
+            }
+            if (!places && is.number(num)) {
+                return true;
+            }
+            if (!num || +(+num || 0).toFixed(places) !== +num) {
+                return false;
+            }
+            return true;
+        };
+        is.not.decimal = function(val) {
+            return is.decimal(val) === false;
+        };
+        is.Window = function(obj) {
+            return is.defined(Window) && obj instanceof Window;
+        };
+        is.not.Window = function(obj) {
+            return is.Window(obj) === false;
+        };
+        return is;
+    }
+})();
+
+(function() {
+    "use strict";
+    var errorTypeWarning = "[POLYN] EXCEPTION WARNING: You should always pass an Error to Exception, to preserver your stack trace";
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = Exception;
+    } else if (window) {
+        window.polyn = window.polyn || {};
+        Object.defineProperty(window.polyn, "Exception", {
+            get: function() {
+                return Exception;
+            },
+            set: function() {
+                var err = new Error("polyn modules are read-only");
+                console.log(err);
+                return err;
+            },
+            enumerable: true,
+            configurable: false
+        });
+    } else {
+        console.log("Unable to define module: UNKNOWN RUNTIME");
+    }
+    function normalizeType(type) {
+        return typeof type === "string" ? type : "Exception";
+    }
+    function normalizeError(type, error) {
+        if (typeof type === "object") {
+            return type;
+        }
+        var err = error;
+        if (typeof error === "string") {
+            console.log(errorTypeWarning);
+            err = new Error(error);
+        } else if (!error) {
+            console.log(errorTypeWarning);
+            err = new Error("UNKNOWN");
+        }
+        return err;
+    }
+    function normalizeMessages(error, messages) {
+        var msgs = [];
+        if (Array.isArray(messages)) {
+            msgs = messages;
+        } else if (messages) {
+            msgs.push(messages);
+        } else if (!messages && error && error.message) {
+            msgs.push(error.message);
+        }
+        return msgs;
+    }
+    function Exception(type, error, messages) {
+        var err = normalizeError(type, error);
+        return {
+            type: normalizeType(type),
+            error: err,
+            messages: normalizeMessages(err, messages),
+            isException: true
+        };
+    }
+})();
+
+(function() {
+    "use strict";
+    var bp;
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = Ctor(require("./async.js"), require("./id.js"), require("./is.js"), require("./Exception.js"));
+    } else if (window) {
+        if (!window.polyn || !window.polyn.async || !window.polyn.id || !window.polyn.is || !window.polyn.Exception) {
+            return console.log("Unable to define module: LOADED OUT OF ORDER");
+        }
+        bp = Ctor(window.polyn.async, window.polyn.id, window.polyn.is, window.polyn.Exception);
+        Object.defineProperty(window.polyn, "Blueprint", {
+            get: function() {
+                return bp;
+            },
+            set: function() {
+                var err = new Error("[POLYN] polyn modules are read-only");
+                console.log(err);
+                return err;
+            },
+            enumerable: true,
+            configurable: false
+        });
+    } else {
+        console.log("Unable to define module: UNKNOWN RUNTIME");
+    }
+    function Ctor(async, id, is, Exception) {
+        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, makeErrorMessage, setReadOnlyProp, config = {
+            rememberValidation: true,
+            compatibility: "v0.3.0"
+        }, locale = {
             errors: {
                 blueprint: {
                     requiresImplementation: "An implementation is required to create a new instance of an interface",
-                    requiresProperty: "The implementation is missing a required property ",
-                    requiresArguments: "The implementation of this function requires arguments ",
+                    requiresProperty: "This implementation does not satisfy blueprint, {{blueprint}}. It should have the property, {{property}}, with type, {{type}}.",
+                    requiresArguments: "This implementation does not satisfy blueprint, {{blueprint}}. The function, {{property}}, is missing arguments",
                     missingConstructorArgument: "An object literal is required when constructing a Blueprint",
-                    reservedPropertyName_singatureMatches: "signatureMatches is a reserved property name for Blueprints",
-                    missingSignatureMatchesImplementationArgument: "A first argument of an object that should implement an interface is required",
-                    missingSignatureMatchesCallbackArgument: "A callback function is required as the second argument to signatureMatches"
+                    missingSignaturesMatchBlueprintArgument: "The `blueprint` argument is required",
+                    missingSignaturesMatchImplementationArgument: "The `implementation` argument is required",
+                    missingSignaturesMatchCallbackArgument: "The `callback` argument is required"
                 }
             }
         };
         signatureMatches = function(implementation, blueprint, callback) {
             var newCallback;
-            implementation.__interfaces = implementation.__interfaces || {};
+            if (config.rememberValidation) {
+                if (config.compatibility === "v0.3.0") {
+                    implementation.__interfaces = implementation.__interfaces || {};
+                } else {
+                    implementation.__blueprints = implementation.__blueprints || {};
+                }
+            }
             newCallback = function(err, result) {
-                if (!err) {
-                    implementation.__interfaces[blueprint.__blueprintId] = true;
+                if (config.rememberValidation && !err) {
+                    if (config.compatibility === "v0.3.0") {
+                        implementation.__interfaces[blueprint.__blueprintId] = true;
+                    } else {
+                        implementation.__blueprints[blueprint.__blueprintId] = true;
+                    }
                 }
                 if (typeof callback === "function") {
                     callback(err, result);
@@ -43,12 +399,14 @@
             return validationResult;
         };
         validateSignature = function(implementation, blueprint, callback) {
-            var validationResult = syncValidateSignature(implementation, blueprint);
-            if (validationResult.result) {
-                callback(null, true);
-            } else {
-                callback(validationResult.errors, false);
-            }
+            async.runAsync(function() {
+                var validationResult = syncValidateSignature(implementation, blueprint);
+                if (validationResult.result) {
+                    callback(null, true);
+                } else {
+                    callback(validationResult.errors, false);
+                }
+            });
         };
         syncValidateSignature = function(implementation, blueprint) {
             var errors = [], prop;
@@ -58,9 +416,9 @@
                     result: true
                 };
             }
-            for (prop in blueprint) {
-                if (blueprint.hasOwnProperty(prop) && prop !== "__blueprintId" && prop !== "signatureMatches") {
-                    validateProperty(implementation, prop, blueprint[prop], errors);
+            for (prop in blueprint.props) {
+                if (blueprint.props.hasOwnProperty(prop)) {
+                    validateProperty(blueprint.__blueprintId, implementation, prop, blueprint.props[prop], errors);
                 }
             }
             if (errors.length > 0) {
@@ -75,403 +433,187 @@
                 };
             }
         };
-        validateProperty = function(implementation, propertyName, propertyValue, errors) {
+        validateProperty = function(blueprintId, implementation, propertyName, propertyValue, errors) {
             if (is.string(propertyValue)) {
-                validatePropertyType(implementation, propertyName, propertyValue, errors);
+                validatePropertyType(blueprintId, implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
-                validatePropertyWithDetails(implementation, propertyName, propertyValue, propertyValue.type, errors);
+                validatePropertyWithDetails(blueprintId, implementation, propertyName, propertyValue, propertyValue.type, errors);
             }
         };
-        validatePropertyWithDetails = function(implementation, propertyName, propertyValue, type, errors) {
-            if (is.function(propertyValue.validate)) {
-                propertyValue.validate(implementation[propertyName], errors);
+        validatePropertyWithDetails = function(blueprintId, implementation, propertyName, propertyValue, type, errors) {
+            if (propertyValue.required === false && (is.not.defined(implementation[propertyName]) || implementation[propertyName] === null)) {
+                return;
+            } else if (is.function(propertyValue.validate)) {
+                propertyValue.validate(implementation[propertyName], errors, implementation);
             } else {
                 switch (type) {
+                  case "blueprint":
+                    validateNestedBlueprint(propertyValue.blueprint, implementation, propertyName, errors);
+                    break;
+
                   case "function":
-                    validatePropertyType(implementation, propertyName, type, errors);
-                    validateFunctionArguments(implementation, propertyName, propertyValue.args, errors);
+                    validatePropertyType(blueprintId, implementation, propertyName, type, errors);
+                    if (propertyValue.args) {
+                        validateFunctionArguments(blueprintId, implementation, propertyName, propertyValue.args, errors);
+                    }
                     break;
 
                   case "decimal":
-                    validateDecimalWithPlaces(implementation, propertyName, propertyValue.places, errors);
+                    validateDecimalWithPlaces(blueprintId, implementation, propertyName, propertyValue.places, errors);
                     break;
 
                   default:
-                    validatePropertyType(implementation, propertyName, type, errors);
+                    validatePropertyType(blueprintId, implementation, propertyName, type, errors);
                     break;
                 }
             }
         };
-        validatePropertyType = function(implementation, propertyName, propertyType, errors) {
+        makeErrorMessage = function(message, blueprintId, propertyName, propertyType) {
+            return message.replace(/{{blueprint}}/gi, blueprintId).replace(/{{property}}/gi, propertyName).replace(/{{type}}/gi, propertyType);
+        };
+        validatePropertyType = function(blueprintId, implementation, propertyName, propertyType, errors) {
             if (is.function(is.not[propertyType]) && is.not[propertyType](implementation[propertyName])) {
-                var message = locale.errors.blueprint.requiresProperty;
-                message += "@property: " + propertyName;
-                message += " (" + propertyType + ")";
-                errors.push(message);
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, propertyType));
             }
         };
-        validateFunctionArguments = function(implementation, propertyName, propertyArguments, errors) {
-            var argumentsAreValid = is.array(propertyArguments);
+        validateFunctionArguments = function(blueprintId, implementation, propertyName, propertyArguments, errors) {
+            var argumentsAreValid, argumentsString;
+            argumentsAreValid = is.array(propertyArguments);
             argumentsAreValid = argumentsAreValid && propertyArguments.length > 0;
             argumentsAreValid = argumentsAreValid && is.function(implementation[propertyName]);
             argumentsAreValid = argumentsAreValid && implementation[propertyName].length === propertyArguments.length;
             if (!argumentsAreValid) {
-                errors.push(locale.errors.blueprint.requiresArguments + "(" + propertyArguments.join(", ") + ")");
+                try {
+                    argumentsString = propertyArguments.join(", ");
+                } catch (e) {
+                    argumentsString = propertyArguments.toString();
+                }
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresArguments, blueprintId, propertyName, argumentsString));
             }
         };
-        validateDecimalWithPlaces = function(implementation, propertyName, places, errors) {
+        validateDecimalWithPlaces = function(blueprintId, implementation, propertyName, places, errors) {
             if (is.not.decimal(implementation[propertyName], places)) {
-                var message = locale.errors.blueprint.requiresProperty;
-                message += "@property: " + propertyName;
-                message += " (decimal with " + places + " places)";
-                errors.push(message);
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, "decimal with " + places + " places"));
             }
+        };
+        validateBooleanArgument = function(blueprintId, implementation, propertyName, errors) {
+            if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, "boolean"));
+            }
+        };
+        validateNestedBlueprint = function(blueprint, implementation, propertyName, errors) {
+            var validationResult = blueprint.syncSignatureMatches(implementation[propertyName]), i;
+            if (!validationResult.result) {
+                for (i = 0; i < validationResult.errors.length; i += 1) {
+                    errors.push(validationResult.errors[i]);
+                }
+            }
+        };
+        setReadOnlyProp = function(obj, name, val) {
+            Object.defineProperty(obj, name, {
+                get: function() {
+                    return val;
+                },
+                set: function() {
+                    var err = new Exception("ReadOnlyViolation", new Error(name + " is read-only"));
+                    console.log(err);
+                    return err;
+                },
+                enumerable: true,
+                configurable: false
+            });
         };
         Blueprint = function(blueprint) {
-            var self = this, prop;
-            if (is.not.defined(blueprint) || is.not.object(blueprint)) {
-                throw new Error(locale.errors.blueprint.missingConstructorArgument);
-            }
+            var self = {}, props = {}, prop;
+            blueprint = blueprint || {};
             for (prop in blueprint) {
                 if (blueprint.hasOwnProperty(prop)) {
-                    if (prop === "signatureMatches") {
-                        throw new Error(locale.errors.blueprint.reservedPropertyName_singatureMatches);
+                    if (prop === "__blueprintId") {
+                        setReadOnlyProp(self, "__blueprintId", blueprint.__blueprintId);
+                    } else {
+                        props[prop] = blueprint[prop];
                     }
-                    self[prop] = blueprint[prop];
                 }
             }
             if (is.not.string(self.__blueprintId)) {
-                self.__blueprintId = id.createUid(8);
+                setReadOnlyProp(self, "__blueprintId", id.createUid(8));
             }
-            self.signatureMatches = function(implementation, callback) {
-                if (is.not.defined(implementation)) {
-                    callback([ locale.errors.blueprint.missingSignatureMatchesImplementationArgument ]);
-                    return;
-                }
-                if (is.not.function(callback)) {
-                    throw new Error(locale.errors.blueprint.missingSignatureMatchesCallbackArgument);
-                }
-                utils.runAsync(function() {
-                    signatureMatches(implementation, self, callback);
-                });
-            };
-            self.syncSignatureMatches = function(implementation) {
-                if (is.not.defined(implementation)) {
-                    return {
-                        errors: [ locale.errors.blueprint.missingSignatureMatchesImplementationArgument ],
-                        result: false
-                    };
-                }
-                return syncSignatureMatches(implementation, self);
-            };
-        };
-        return Blueprint;
-    };
-    if (typeof Window !== "undefined" && scope instanceof Window) {
-        scope[definition.name] = definition.factory;
-    } else if (typeof scope.register === "function") {
-        scope.register(definition);
-    } else {
-        scope.name = definition.name;
-        scope.dependencies = definition.dependencies;
-        scope.factory = definition.factory;
-    }
-})(typeof module !== "undefined" && module.exports ? module.exports : Hilary && Hilary.scope ? Hilary.scope("polyn") : window);
-
-(function(scope) {
-    "use strict";
-    var definition = {
-        name: "polyn.exceptions",
-        dependencies: [ "polyn.is" ],
-        factory: undefined
-    };
-    definition.factory = function(is) {
-        return function(exceptionHandler) {
-            var self = {
-                makeException: undefined,
-                makeArgumentException: undefined,
-                makeNotImplementedException: undefined,
-                throwException: undefined
-            };
-            self.makeException = function(name, message, data) {
-                var msg, err;
-                if (typeof name === "object" && typeof name.message === "string") {
-                    msg = name.message;
-                    err = name;
-                } else {
-                    msg = typeof message === "string" ? message : name;
-                    err = new Error(msg);
-                }
-                err.message = msg;
-                if (name !== msg) {
-                    err.name = name;
-                }
-                if (data) {
-                    err.data = data;
-                }
-                return err;
-            };
-            self.makeArgumentException = function(message, argument, data) {
-                var msg = typeof argument === "undefined" ? message : message + " (argument: " + argument + ")";
-                return self.makeException("ArgumentException", msg, data);
-            };
-            self.makeNotImplementedException = function(message, data) {
-                return self.makeException("NotImplementedException", message, data);
-            };
-            self.throwException = function(exception) {
-                if (is.function(exceptionHandler)) {
-                    exceptionHandler(exception);
-                } else {
-                    console.error(exception);
-                    throw exception;
-                }
-            };
+            setReadOnlyProp(self, "props", props);
+            setReadOnlyProp(self, "signatureMatches", function(implementation, callback) {
+                return Blueprint.signaturesMatch(self, implementation, callback);
+            });
+            setReadOnlyProp(self, "syncSignatureMatches", function(implementation) {
+                return Blueprint.syncSignaturesMatch(self, implementation);
+            });
+            setReadOnlyProp(self, "inherits", function(otherBlueprint) {
+                return Blueprint.syncMerge([ self, otherBlueprint ]);
+            });
             return self;
         };
-    };
-    if (typeof Window !== "undefined" && scope instanceof Window) {
-        scope[definition.name] = definition.factory;
-    } else if (typeof scope.register === "function") {
-        scope.register(definition);
-    } else {
-        scope.name = definition.name;
-        scope.dependencies = definition.dependencies;
-        scope.factory = definition.factory;
-    }
-})(typeof module !== "undefined" && module.exports ? module.exports : Hilary && Hilary.scope ? Hilary.scope("polyn") : window);
-
-(function(scope) {
-    "use strict";
-    var definition = {
-        name: "polyn.id",
-        dependencies: [],
-        factory: undefined
-    };
-    definition.factory = function() {
-        var self = {
-            createUid: undefined,
-            createGuid: undefined
-        }, createRandomString;
-        createRandomString = function(templateString) {
-            return templateString.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c === "x" ? r : r & 3 | 8;
-                return v.toString(16);
+        Blueprint.signaturesMatch = function(blueprint, implementation, callback) {
+            if (is.not.defined(blueprint)) {
+                callback([ locale.errors.blueprint.missingSignaturesMatchBlueprintArgument ]);
+                return;
+            }
+            if (is.not.defined(implementation)) {
+                callback([ locale.errors.blueprint.missingSignaturesMatchImplementationArgument ]);
+                return;
+            }
+            if (is.not.function(callback)) {
+                throw new Error(locale.errors.blueprint.missingSignaturesMatchCallbackArgument);
+            }
+            async.runAsync(function() {
+                signatureMatches(implementation, blueprint, callback);
             });
         };
-        self.createUid = function(length) {
-            var template;
-            length = length || 12;
-            template = new Array(length + 1).join("x");
-            return createRandomString(template);
+        Blueprint.syncSignaturesMatch = function(blueprint, implementation) {
+            if (is.not.defined(blueprint)) {
+                return {
+                    errors: [ locale.errors.blueprint.missingSignaturesMatchBlueprintArgument ],
+                    result: false
+                };
+            }
+            if (is.not.defined(implementation)) {
+                return {
+                    errors: [ locale.errors.blueprint.missingSignaturesMatchImplementationArgument ],
+                    result: false
+                };
+            }
+            return syncSignatureMatches(implementation, blueprint);
         };
-        self.createGuid = function() {
-            return createRandomString("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx");
+        Blueprint.merge = function(blueprints, callback) {
+            async.runAsync(function() {
+                callback(null, Blueprint.syncMerge(blueprints));
+            });
         };
-        return self;
-    };
-    if (typeof Window !== "undefined" && scope instanceof Window) {
-        scope[definition.name] = definition.factory;
-    } else if (typeof scope.register === "function") {
-        scope.register(definition);
-    } else {
-        scope.name = definition.name;
-        scope.dependencies = definition.dependencies;
-        scope.factory = definition.factory;
+        Blueprint.syncMerge = function(blueprints) {
+            var blueprint1, prop, next = true;
+            if (!Array.isArray(blueprints)) {
+                return null;
+            }
+            blueprint1 = blueprints.shift();
+            while (next) {
+                next = blueprints.shift();
+                if (!next) {
+                    break;
+                }
+                for (prop in next.props) {
+                    if (next.props.hasOwnProperty(prop)) {
+                        blueprint1.props[prop] = blueprint1.props[prop] || next.props[prop];
+                    }
+                }
+            }
+            return blueprint1;
+        };
+        Blueprint.configure = function(cfg) {
+            cfg = cfg || {};
+            if (typeof cfg.rememberValidation !== "undefined") {
+                config.rememberValidation = cfg.rememberValidation;
+            }
+            if (typeof cfg.compatibility !== "undefined") {
+                config.compatibility = cfg.compatibility;
+            }
+        };
+        return Blueprint;
     }
-})(typeof module !== "undefined" && module.exports ? module.exports : Hilary && Hilary.scope ? Hilary.scope("polyn") : window);
-
-(function(scope) {
-    "use strict";
-    var definition = {
-        name: "polyn.is",
-        dependencies: [],
-        factory: undefined
-    };
-    definition.factory = function() {
-        var self = {
-            getType: undefined,
-            defined: undefined,
-            nullOrUndefined: undefined,
-            "function": undefined,
-            object: undefined,
-            array: undefined,
-            string: undefined,
-            "boolean": undefined,
-            datetime: undefined,
-            regexp: undefined,
-            number: undefined,
-            nullOrWhitespace: undefined,
-            money: undefined,
-            decimal: undefined,
-            Window: undefined,
-            not: {
-                defined: undefined,
-                "function": undefined,
-                object: undefined,
-                array: undefined,
-                string: undefined,
-                "boolean": undefined,
-                datetime: undefined,
-                regexp: undefined,
-                number: undefined,
-                nullOrWhitespace: undefined,
-                money: undefined,
-                decimal: undefined,
-                Window: undefined
-            }
-        }, class2Types = {}, class2ObjTypes = [ "Boolean", "Number", "String", "Function", "Array", "Date", "RegExp", "Object" ], i, name;
-        for (i = 0; i < class2ObjTypes.length; i += 1) {
-            name = class2ObjTypes[i];
-            class2Types["[object " + name + "]"] = name.toLowerCase();
-        }
-        self.getType = function(obj) {
-            if (typeof obj === "undefined") {
-                return "undefined";
-            }
-            if (obj === null) {
-                return String(obj);
-            }
-            return typeof obj === "object" || typeof obj === "function" ? class2Types[Object.prototype.toString.call(obj)] || "object" : typeof obj;
-        };
-        self.defined = function(obj) {
-            try {
-                return self.getType(obj) !== "undefined";
-            } catch (e) {
-                return false;
-            }
-        };
-        self.not.defined = function(obj) {
-            return self.defined(obj) === false;
-        };
-        self.nullOrUndefined = function(obj) {
-            return self.not.defined(obj) || obj === null;
-        };
-        self.not.nullOrWhitespace = function(str) {
-            if (typeof str === "undefined" || typeof str === null || self.not.string(str)) {
-                return false;
-            }
-            return /([^\s])/.test(str);
-        };
-        self.nullOrWhitespace = function(str) {
-            return self.not.nullOrWhitespace(str) === false;
-        };
-        self.function = function(obj) {
-            return self.getType(obj) === "function";
-        };
-        self.not.function = function(obj) {
-            return self.function(obj) === false;
-        };
-        self.object = function(obj) {
-            return self.getType(obj) === "object";
-        };
-        self.not.object = function(obj) {
-            return self.object(obj) === false;
-        };
-        self.array = function(obj) {
-            return self.getType(obj) === "array";
-        };
-        self.not.array = function(obj) {
-            return self.array(obj) === false;
-        };
-        self.string = function(obj) {
-            return self.getType(obj) === "string";
-        };
-        self.not.string = function(obj) {
-            return self.string(obj) === false;
-        };
-        self.boolean = function(obj) {
-            return self.getType(obj) === "boolean";
-        };
-        self.not.boolean = function(obj) {
-            return self.boolean(obj) === false;
-        };
-        self.datetime = function(obj) {
-            return self.getType(obj) === "date";
-        };
-        self.not.datetime = function(obj) {
-            return self.datetime(obj) === false;
-        };
-        self.regexp = function(obj) {
-            return self.getType(obj) === "regexp";
-        };
-        self.not.regexp = function(obj) {
-            return self.regexp(obj) === false;
-        };
-        self.number = function(obj) {
-            return self.getType(obj) === "number";
-        };
-        self.not.number = function(obj) {
-            return self.number(obj) === false;
-        };
-        self.money = function(val) {
-            return self.defined(val) && /^(?:-)?[0-9]\d*(?:\.\d{0,2})?$/.test(val.toString());
-        };
-        self.not.money = function(val) {
-            return self.money(val) === false;
-        };
-        self.decimal = function(num, places) {
-            if (self.not.number(num)) {
-                return false;
-            }
-            if (!places && self.number(num)) {
-                return true;
-            }
-            if (!num || +(+num || 0).toFixed(places) !== +num) {
-                return false;
-            }
-            return true;
-        };
-        self.not.decimal = function(val) {
-            return self.decimal(val) === false;
-        };
-        self.Window = function(obj) {
-            return self.is.defined(Window) && obj instanceof Window;
-        };
-        self.not.Window = function(obj) {
-            return self.is.Window(obj) === false;
-        };
-        return self;
-    };
-    if (typeof Window !== "undefined" && scope instanceof Window) {
-        scope[definition.name] = definition.factory;
-    } else if (typeof scope.register === "function") {
-        scope.register(definition);
-    } else {
-        scope.name = definition.name;
-        scope.dependencies = definition.dependencies;
-        scope.factory = definition.factory;
-    }
-})(typeof module !== "undefined" && module.exports ? module.exports : Hilary && Hilary.scope ? Hilary.scope("polyn") : window);
-
-(function(scope) {
-    "use strict";
-    var definition = {
-        name: "polyn.utils",
-        dependencies: [ "polyn.is" ],
-        factory: undefined
-    };
-    definition.factory = function(is) {
-        var self = {
-            runAsync: undefined
-        };
-        self.runAsync = function(func, highPriority) {
-            if (highPriority === true && is.defined(process) && is.function(process.nextTick)) {
-                process.nextTick(func);
-            } else if (setImmediate) {
-                setImmediate(func);
-            } else {
-                setTimeout(func, 0);
-            }
-        };
-        return self;
-    };
-    if (typeof Window !== "undefined" && scope instanceof Window) {
-        scope[definition.name] = definition.factory;
-    } else if (typeof scope.register === "function") {
-        scope.register(definition);
-    } else {
-        scope.name = definition.name;
-        scope.dependencies = definition.dependencies;
-        scope.factory = definition.factory;
-    }
-})(typeof module !== "undefined" && module.exports ? module.exports : Hilary && Hilary.scope ? Hilary.scope("polyn") : window);
+})();
