@@ -43,7 +43,7 @@ Blueprint is a validation tool. It can be use to:
 * Validate or require properties
 * Validate or require arguments
 
-Read more about [Blueprints on the wiki](/losandes/polyn/wiki/Blueprint).
+Read more about [Blueprints on the wiki](https://github.com/losandes/polyn/wiki/Blueprint).
 
 ## Immutable
 Immutable allows us to generate constructors that validate schema's, using Blueprint, and to render immutable objects.
@@ -51,4 +51,4 @@ Immutable allows us to generate constructors that validate schema's, using Bluep
 > im•mu•ta•ble (ĭ-myo͞oˈtə-bəl), adj.
 > Not subject or susceptible to change.
 
-Read more about [Blueprints on the wiki](/losandes/polyn/wiki/Immutable).
+Read more about [Immutables on the wiki](https://github.com/losandes/polyn/wiki/Immutable).
