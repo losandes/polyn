@@ -172,7 +172,9 @@
         };
 
         is.datetime = function (obj) {
-            return is.getType(obj) === 'date' && !isNaN(obj.getTime());
+            return  is.getType(obj) === 'date' &&
+                    is.function(obj.getTime) &&
+                    !isNaN(obj.getTime());
         };
 
         is.not.datetime = function (obj) {
