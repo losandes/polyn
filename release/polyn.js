@@ -1,4 +1,4 @@
-/*! polyn 2016-11-19 */
+/*! polyn 2016-11-20 */
 (function() {
     "use strict";
     var async = Async();
@@ -664,8 +664,10 @@
             function Constructor(values) {
                 var propName, internal = {}, self = {};
                 values = values || {};
-                if (schema.__skipValdation !== true && !blueprint.syncSignatureMatches(values).result) {
-                    return new InvalidArgumentException(new Error("The argument passed to the constructor is not valid"), blueprint.syncSignatureMatches(values).errors);
+                if (schema.__skipValdation !== true && !Blueprint.validate(blueprint, values).result) {
+                    var err = new InvalidArgumentException(new Error("The argument passed to the constructor is not valid"), Blueprint.validate(blueprint, values).errors);
+                    config.onError(err);
+                    return err;
                 }
                 try {
                     for (propName in schema) {
@@ -686,8 +688,8 @@
             Constructor.toObject = function(from) {
                 return toObject(from, {});
             };
-            Constructor.validate = function(instance) {
-                return blueprint.syncSignatureMatches(instance);
+            Constructor.validate = function(instance, callback) {
+                return Blueprint.validate(blueprint, instance, callback);
             };
             Constructor.log = function(instance) {
                 if (!instance) {

@@ -73,6 +73,9 @@
                             expect(sut.str).to.equal('bar');
                             expect(err.isException).to.equal(true);
                             expect(err.type).to.equal('ReadOnlyViolation');
+                            // unconfigure it, so this test doesn't receive feedback from other tests
+                            Immutable.configure({ onError: function () {}});
+
                             done();
                         }
                     });
@@ -138,9 +141,13 @@
                     Immutable.configure({
                         onError: function (err) {
                             // then
-                            expect(sut.nested.str).to.equal('bar');
+                            console.log('h2');
+                            expect(sut.nested.str).to.equal('baz');
                             expect(err.isException).to.equal(true);
                             expect(err.type).to.equal('ReadOnlyViolation');
+                            // unconfigure it, so this test doesn't receive feedback from other tests
+                            Immutable.configure({ onError: function () {}});
+
                             done();
                         }
                     });
@@ -155,7 +162,7 @@
                     sut = new Sut({
                         str: 'bar',
                         nested: {
-                            str: 'bar'
+                            str: 'baz'
                         }
                     });
 
@@ -163,7 +170,7 @@
                     actual = (sut.nested.str = 'foo');
 
                     // then (ALSO SEE onError (above)
-                    expect(sut.nested.str).to.equal('bar');
+                    expect(sut.nested.str).to.equal('baz');
                 });
             });
 
@@ -171,13 +178,13 @@
                 describe('and the object is VALID', function () {
                     it('should create a new object letting the object values override values in the existing immutable', function () {
                         // given
-                        var Sut = makeSut(),
+                        var Sut = new Immutable({
+                                str: 'string',
+                                num: 'number'
+                            }),
                             sut = new Sut({
                                 str: 'bar',
-                                num: 9,
-                                validated: 42,
-                                requiredProp: 'hello',
-                                withSetter: 'bar'
+                                num: 9
                             }),
                             expected = {
                                 str: 'foo',
@@ -192,9 +199,6 @@
                         expect(actual.isException).to.equal(undefined);
                         expect(actual.str).to.equal(expected.str);
                         expect(actual.num).to.equal(expected.num);
-                        expect(actual.validated).to.equal(sut.validated);
-                        expect(actual.requiredProp).to.equal(sut.requiredProp);
-                        expect(actual.withSetter).to.equal(sut.withSetter);
                     });
                 });
 

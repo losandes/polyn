@@ -86,11 +86,11 @@
                     // you can override initial validation by setting
                     // `schema.__skipValdation: true`
                     schema.__skipValdation !== true &&
-                    !blueprint.syncSignatureMatches(values).result
+                    !Blueprint.validate(blueprint, values).result
                 ) {
                     var err = new InvalidArgumentException(
                         new Error('The argument passed to the constructor is not valid'),
-                        blueprint.syncSignatureMatches(values).errors
+                        Blueprint.validate(blueprint, values).errors
                     );
 
                     config.onError(err);
