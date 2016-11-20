@@ -1,8 +1,0 @@
-{
-    "name": "polyn-tests",
-    "description": "mocha test fixtures for polyn",
-    "version": "0.0.1",
-    "dependencies": {
-        "chai": "*"
-    }
-}
