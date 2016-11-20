@@ -51,4 +51,4 @@ Immutable allows us to generate constructors that validate schema's, using Bluep
 > im•mu•ta•ble (ĭ-myo͞oˈtə-bəl), adj.
 > Not subject or susceptible to change.
 
-Read more about [Blueprints on the wiki](/losandes/polyn/wiki/Immutable).
+Read more about [Immutables on the wiki](/losandes/polyn/wiki/Immutable).
