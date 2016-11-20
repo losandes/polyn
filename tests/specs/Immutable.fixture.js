@@ -377,6 +377,76 @@
                 expect(Object.prototype.toString.call(actual.date)).to.equal('[object Date]');
                 expect(actual.date.getTime() - expected.date.getTime() < 1000).to.equal(true);
             });
+
+            describe('when __skipValdation is true', function () {
+                it('should NOT validate objects upon construction', function () {
+                    // given
+                    var Sut = new Immutable({
+                        name: 'string',
+                        __skipValdation: true
+                    }), actual;
+
+                    // when
+                    actual = new Sut({});
+
+                    // then
+                    expect(actual.isException).to.equal(undefined);
+                });
+            });
+
+            describe('when lazy validation is used', function () {
+                it('should NOT return an error when the model is VALID', function () {
+                    // given
+                    var Sut = new Immutable({
+                        name: 'string',
+                        __skipValdation: true
+                    }),
+                    sut = new Sut({ name: 'Andy' }),
+                    actual;
+
+                    // when
+                    actual = Sut.validate(sut);
+
+                    // then
+                    expect(Array.isArray(actual.errors)).to.equal(false);
+                    expect(actual.result).to.equal(true);
+                });
+
+                it('should return an error when the model is INVALID', function () {
+                    // given
+                    var Sut = new Immutable({
+                        name: 'string',
+                        __skipValdation: true
+                    }),
+                    sut = new Sut({}),
+                    actual;
+
+                    // when
+                    actual = Sut.validate(sut);
+
+                    // then
+                    expect(Array.isArray(actual.errors)).to.equal(true);
+                    expect(actual.result).to.equal(false);
+                });
+
+                it('should support async validation', function (done) {
+                    // given
+                    var Sut = new Immutable({
+                        name: 'string',
+                        __skipValdation: true
+                    }),
+                    sut = new Sut({ name: 'Andy' }),
+                    actual;
+
+                    // when
+                    actual = Sut.validate(sut, function (errors, result) {
+                        // then
+                        expect(Array.isArray(errors)).to.equal(false);
+                        expect(result).to.equal(true);
+                        done();
+                    });
+                });
+            });
         }); // /describe Immutable
 
         function makeSut () {
