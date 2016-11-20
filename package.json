@@ -9,10 +9,13 @@
     },
     "keywords": [
         "polymorphism",
+        "immutable",
         "interface",
         "class",
         "blueprint",
-        "hilary"
+        "hilary",
+        "immutables",
+        "immutability"
     ],
     "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
     "license": "MIT",
