@@ -9,23 +9,21 @@ module.exports = function (grunt) {
     grunt.config.set('karma', {
         options: {
             // see http://karma-runner.github.io/0.8/config/configuration-file.html
-            basePath: '../',
+            basePath: './',
             frameworks: ['mocha', 'chai'],
             files: [
-//                "tests/browser/bower_components/jquery/dist/jquery.min.js",
-//                "test/browser/bower_components/async/lib/async.js",
-//                "test/browser/test.setup.js",
-//                // hilary
-//                "release/hilary.min.js",
-//                "release/hilary.jQueryEventEmitter.min.js",
-//                "release/hilary.amd.min.js",
-//                // mock data
-//                "test/mockData.js",
-//                // specs
-//                { pattern: 'test/*.fixture.js', included: true, served: true }, // watched: false, served: true}
-//                { pattern: 'test/browser/*.fixture.js', included: true, served: true },
-//                // runner
-//                "test/browser/test.js"
+                'tests/browser-setup.js',
+                // polyn
+                'release/polyn.js',
+                // specs
+                'tests/specs/async.fixture.js',
+                'tests/specs/Blueprint.fixture.js',
+                'tests/specs/Exception.fixture.js',
+                'tests/specs/id.fixture.js',
+                'tests/specs/Immutable.fixture.js',
+                'tests/specs/is.fixture.js',
+                // runner
+                'tests/browser-bootstrapper.js'
             ],
             reporters: ['nyan'],
             reportSlowerThan: 2000,
@@ -47,7 +45,7 @@ module.exports = function (grunt) {
             singleRun: false
         },
         //continuous integration mode: run tests once in PhantomJS browser.
-        continuous: {
+        unit_headless: {
             singleRun: true,
             browsers: ['PhantomJS']
         }

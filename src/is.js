@@ -1,15 +1,38 @@
-/*globals Hilary, Window*/
-(function (scope) {
+(function () {
     'use strict';
 
-    var definition = {
-        name: 'polyn.is',
-        dependencies: [],
-        factory: undefined
-    };
+    var is = Is();
 
-    definition.factory = function () {
-        var self = {
+    /*
+    // Exports
+    */
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = is;
+    } else if (window) {
+        window.polyn = window.polyn || {};
+        Object.defineProperty(window.polyn, 'is', {
+            get: function () {
+                return is;
+            },
+            set: function () {
+                var err = new Error('[POLYN] polyn modules are read-only');
+                console.log(err);
+                return err;
+            },
+            // this property should show up when this object's property names are enumerated
+            enumerable: true,
+            // this property may not be deleted
+            configurable: false
+        });
+    } else {
+        console.log('[POLYN] Unable to define module: UNKNOWN RUNTIME');
+    }
+
+    /*
+    // is
+    */
+    function Is () {
+        var is = {
                 getType: undefined,
                 defined: undefined,
                 nullOrUndefined: undefined,
@@ -17,7 +40,9 @@
                 object: undefined,
                 array: undefined,
                 string: undefined,
+                bool: undefined,
                 boolean: undefined,
+                date: undefined,
                 datetime: undefined,
                 regexp: undefined,
                 number: undefined,
@@ -31,7 +56,9 @@
                     object: undefined,
                     array: undefined,
                     string: undefined,
+                    bool: undefined,
                     boolean: undefined,
+                    date: undefined,
                     datetime: undefined,
                     regexp: undefined,
                     number: undefined,
@@ -51,7 +78,7 @@
             class2Types['[object ' + name + ']'] = name.toLowerCase();
         }
 
-        self.getType = function (obj) {
+        is.getType = function (obj) {
             if (typeof obj === 'undefined') {
                 return 'undefined';
             }
@@ -65,148 +92,151 @@
                 typeof obj;
         };
 
-        self.defined = function (obj) {
+        is.defined = function (obj) {
             try {
-                return self.getType(obj) !== 'undefined';
+                return is.getType(obj) !== 'undefined';
             } catch (e) {
                 return false;
             }
         };
-        
-        self.not.defined = function (obj) {
-            return self.defined(obj) === false;
+
+        is.not.defined = function (obj) {
+            return is.defined(obj) === false;
         };
-        
-        self.nullOrUndefined = function (obj) {
-            return self.not.defined(obj) || obj === null;
+
+        is.nullOrUndefined = function (obj) {
+            return is.not.defined(obj) || obj === null;
         };
-        
-        self.not.nullOrWhitespace = function (str) {
-            if (typeof str === 'undefined' || typeof str === null || self.not.string(str)) {
+
+        is.not.nullOrWhitespace = function (str) {
+            if (typeof str === 'undefined' || typeof str === null || is.not.string(str)) {
                 return false;
             }
-            
+
             // ([^\s]*) = is not whitespace
             // /^$|\s+/ = is empty or whitespace
 
             return (/([^\s])/).test(str);
         };
 
-        self.nullOrWhitespace = function (str) {
-            return self.not.nullOrWhitespace(str) === false;
-        };
-        
-        self.function = function (obj) {
-            return self.getType(obj) === 'function';
-        };
-        
-        self.not.function = function (obj) {
-            return self.function(obj) === false;
-        };
-        
-        self.object = function (obj) {
-            return self.getType(obj) === 'object';
-        };
-        
-        self.not.object = function (obj) {
-            return self.object(obj) === false;
-        };
-        
-        self.array = function (obj) {
-            return self.getType(obj) === 'array';
-        };
-        
-        self.not.array = function (obj) {
-            return self.array(obj) === false;
-        };
-        
-        self.string = function (obj) {
-            return self.getType(obj) === 'string';
-        };
-        
-        self.not.string = function (obj) {
-            return self.string(obj) === false;
-        };
-        
-        self.boolean = function (obj) {
-            return self.getType(obj) === 'boolean';
-        };
-        
-        self.not.boolean = function (obj) {
-            return self.boolean(obj) === false;
-        };
-        
-        self.datetime = function (obj) {
-            return self.getType(obj) === 'date';
-        };
-        
-        self.not.datetime = function (obj) {
-            return self.datetime(obj) === false;
-        };
-        
-        self.regexp = function (obj) {
-            return self.getType(obj) === 'regexp';
-        };
-        
-        self.not.regexp = function (obj) {
-            return self.regexp(obj) === false;
-        };
-        
-        self.number = function (obj) {
-            return self.getType(obj) === 'number';
-        };
-        
-        self.not.number = function (obj) {
-            return self.number(obj) === false;
+        is.nullOrWhitespace = function (str) {
+            return is.not.nullOrWhitespace(str) === false;
         };
 
-        self.money = function (val) {
-            return self.defined(val) && (/^(?:-)?[0-9]\d*(?:\.\d{0,2})?$/).test(val.toString());
+        is.function = function (obj) {
+            return is.getType(obj) === 'function';
         };
-        
-        self.not.money = function (val) {
-            return self.money(val) === false;
+
+        is.not.function = function (obj) {
+            return is.function(obj) === false;
         };
-        
-        self.decimal = function (num, places) {
-            if (self.not.number(num)) {
+
+        is.object = function (obj) {
+            return is.getType(obj) === 'object';
+        };
+
+        is.not.object = function (obj) {
+            return is.object(obj) === false;
+        };
+
+        is.array = function (obj) {
+            return is.getType(obj) === 'array';
+        };
+
+        is.not.array = function (obj) {
+            return is.array(obj) === false;
+        };
+
+        is.string = function (obj) {
+            return is.getType(obj) === 'string';
+        };
+
+        is.not.string = function (obj) {
+            return is.string(obj) === false;
+        };
+
+        is.bool = function (obj) {
+            return is.getType(obj) === 'boolean';
+        };
+
+        is.not.bool = function (obj) {
+            return is.boolean(obj) === false;
+        };
+
+        is.boolean = function (obj) {
+            return is.getType(obj) === 'boolean';
+        };
+
+        is.not.boolean = function (obj) {
+            return is.boolean(obj) === false;
+        };
+
+        is.datetime = function (obj) {
+            return is.getType(obj) === 'date' && !isNaN(obj.getTime());
+        };
+
+        is.not.datetime = function (obj) {
+            return is.datetime(obj) === false;
+        };
+
+        is.date = is.datetime;
+        is.not.date = is.not.datetime;
+
+        is.regexp = function (obj) {
+            return is.getType(obj) === 'regexp';
+        };
+
+        is.not.regexp = function (obj) {
+            return is.regexp(obj) === false;
+        };
+
+        is.number = function (obj) {
+            return is.getType(obj) === 'number';
+        };
+
+        is.not.number = function (obj) {
+            return is.number(obj) === false;
+        };
+
+        is.money = function (val) {
+            return is.defined(val) && (/^(?:-)?[0-9]\d*(?:\.\d{0,2})?$/).test(val.toString());
+        };
+
+        is.not.money = function (val) {
+            return is.money(val) === false;
+        };
+
+        is.decimal = function (num, places) {
+            if (is.not.number(num)) {
                 return false;
             }
-            
-            if (!places && self.number(num)) {
+
+            if (!places && is.number(num)) {
                 return true;
             }
-            
+
             if (!num || +(+num || 0).toFixed(places) !== +num) {
                 return false;
             }
-            
+
             return true;
         };
-        
-        self.not.decimal = function (val) {
-            return self.decimal(val) === false;
-        };
-        
-        self.Window = function (obj) {
-            return self.is.defined(Window) && obj instanceof Window;
-        };
-        
-        self.not.Window = function (obj) {
-            return self.is.Window(obj) === false;
+
+        is.not.decimal = function (val) {
+            return is.decimal(val) === false;
         };
 
-        return self;
-    };
+        is.Window = function (obj) {
+            return is.defined(Window) && obj instanceof Window;
+        };
 
-    if (typeof Window !== 'undefined' && scope instanceof Window) {
-        scope[definition.name] = definition.factory;
-    } else if (typeof scope.register === 'function') {
-        scope.register(definition);
-    } else {
-        scope.name = definition.name;
-        scope.dependencies = definition.dependencies;
-        scope.factory = definition.factory;
+        is.not.Window = function (obj) {
+            return is.Window(obj) === false;
+        };
+
+        return is;
     }
 
-}((typeof module !== 'undefined' && module.exports) ? module.exports : ((Hilary && Hilary.scope) ? Hilary.scope('polyn') : window)));
+
+
+}());

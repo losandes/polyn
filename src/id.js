@@ -1,53 +1,65 @@
-
-/*jshint bitwise: false*/
-/*globals Hilary, Window*/
-(function (scope) {
+/*jslint bitwise:true*/
+(function () {
     'use strict';
 
-    var definition = {
-        name: 'polyn.id',
-        dependencies: [],
-        factory: undefined
-    };
+    var id = Id();
 
-    definition.factory = function () {
-        var self = {
+    /*
+    // Exports
+    */
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = id;
+    } else if (window) {
+        window.polyn = window.polyn || {};
+        Object.defineProperty(window.polyn, 'id', {
+            get: function () {
+                return id;
+            },
+            set: function () {
+                var err = new Error('[POLYN] polyn modules are read-only');
+                console.log(err);
+                return err;
+            },
+            // this property should show up when this object's property names are enumerated
+            enumerable: true,
+            // this property may not be deleted
+            configurable: false
+        });
+    } else {
+        console.log('[POLYN] Unable to define module: UNKNOWN RUNTIME');
+    }
+
+    /*
+    // id
+    */
+    function Id () {
+        var id = {
                 createUid: undefined,
                 createGuid: undefined
             },
             createRandomString;
-        
+
         createRandomString = function (templateString) {
             return templateString.replace(/[xy]/g, function (c) {
                 var r = Math.random() * 16 | 0, v = c === 'x' ? r : r & 3 | 8;
                 return v.toString(16);
             });
         };
-        
-        self.createUid = function (length) {
+
+        id.createUid = function (length) {
             var template;
-            
+
             length = length || 12;
             template = new Array(length + 1).join('x');
-            
+
             return createRandomString(template);
         };
-        
-        self.createGuid = function () {
+
+        id.createGuid = function () {
             return createRandomString('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx');
         };
 
-        return self;
-    };
-
-    if (typeof Window !== 'undefined' && scope instanceof Window) {
-        scope[definition.name] = definition.factory;
-    } else if (typeof scope.register === 'function') {
-        scope.register(definition);
-    } else {
-        scope.name = definition.name;
-        scope.dependencies = definition.dependencies;
-        scope.factory = definition.factory;
+        return id;
     }
 
-}((typeof module !== 'undefined' && module.exports) ? module.exports : ((Hilary && Hilary.scope) ? Hilary.scope('polyn') : window)));
+}());

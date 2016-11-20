@@ -1,264 +1,874 @@
+(function () {
+    'use strict';
 
-/*jshint mocha: true, unused: false*/
-/*globals describe, it*/
-'use strict';
+    /*
+    // Exports
+    */
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports.run = Spec;
+    } else if (window) {
+        window.fixtures = window.fixtures || {};
+        window.fixtures.Blueprint = {
+            run: Spec
+        };
+    } else {
+        console.log('Unable to define module: UNKNOWN RUNTIME');
+    }
 
-var expect = require('chai').expect,
-    is = require('../../src/is.js').factory(),
-    utils = require('../../src/utils.js').factory(is),
-    id = require('../../src/id.js').factory(),
-    Blueprint = require('../../src/Blueprint.js').factory(utils, is, id),
-    sutSetup;
+    function Spec (Blueprint, id, is, describe, it, expect) {
+        describe('Blueprint', function () {
+            var sutSetup;
 
-sutSetup = function () {
-    var bp = new Blueprint({
-        __blueprintId: 'bp',
-        num: 'number',
-        str: 'string',
-        arr: 'array',
-        currency: 'money',
-        bool: 'bool',
-        obj: 'object',
-        func: {
-            type: 'function',
-            args: ['arg1', 'arg2']
-        },
-        dec: {
-            type: 'decimal',
-            places: 2
-        }
-    });
-    
-    return {
-        blueprint: bp
-    };
-};
-
-describe('Blueprint, ', function () {
-    
-    describe('when a Blueprint is constructed and it has the __blueprintId property', function () {
-        
-        it('should maintain the value of the __blueprintId', function () {
-            // given
-            var uid = id.createUid(8),
-                sut;
-            
-            // when
-            sut = new Blueprint({ __blueprintId: uid });
-            
-            // then
-            expect(sut.__blueprintId).to.equal(uid);
-        });
-        
-    });
-    
-    describe('when a Blueprint is constructed and it is missing the __blueprintId property', function () {
-        
-        it('should be given a 8 character unique identifier', function () {
-            // given
-            var sut;
-            
-            // when
-            sut = new Blueprint({ foo: 'bar' });
-            
-            // then
-            expect(is.string(sut.__blueprintId)).to.equal(true);
-            expect(sut.__blueprintId.length).to.equal(8);
-        });
-        
-    });
-
-    describe('when an object that implements a given Blueprint is passed as an argument to signatureMatches', function () {
-
-        it('should pass true in as the second argument to the callback', function (done) {
-            // given
-            var sut = sutSetup(),
-                obj = {
-                    num: 42,
+            sutSetup = function () {
+                var bp = new Blueprint({
+                    __blueprintId: 'bp',
+                    num: 'number',
                     str: 'string',
-                    arr: [],
-                    currency: '42.42',
-                    bool: true,
-                    obj: {
-                        foo: 'bar'
+                    arr: 'array',
+                    currency: 'money',
+                    bool: 'bool',
+                    obj: 'object',
+                    func: {
+                        type: 'function',
+                        args: ['arg1', 'arg2']
                     },
-                    func: function (arg1, arg2) {},
-                    dec: 42.42
-                };
+                    dec: {
+                        type: 'decimal',
+                        places: 2
+                    }
+                });
 
-            // when
-            sut.blueprint.signatureMatches(obj, function (err, result) {
-                // then
-                expect(result).to.equal(true);
-                done();
+                return bp;
+            };
+
+            describe('when a Blueprint is constructed and it has the __blueprintId property', function () {
+                it('should maintain the value of the __blueprintId', function () {
+                    // given
+                    var uid = id.createUid(8),
+                        sut;
+
+                    // when
+                    sut = new Blueprint({ __blueprintId: uid });
+
+                    // then
+                    expect(sut.__blueprintId).to.equal(uid);
+                });
             });
 
-        });
-        
-        it('should pass true in as the second argument to the callback, even when there are additional properties', function (done) {
-            // given
-            var sut = sutSetup(),
-                obj = {
-                    num: 42,
-                    str: 'string',
-                    arr: [],
-                    currency: '42.42',
-                    bool: true,
-                    obj: {
-                        foo: 'bar'
-                    },
-                    func: function (arg1, arg2) {},
-                    dec: 42.42,
-                    foo: 'foo',
-                    bar: 'bar'
-                };
+            describe('when a Blueprint is constructed and it is missing the __blueprintId property', function () {
+                it('should be given a 8 character unique identifier', function () {
+                    // given
+                    var sut;
 
-            // when
-            sut.blueprint.signatureMatches(obj, function (err, result) {
-                // then
-                expect(result).to.equal(true);
-                done();
+                    // when
+                    sut = new Blueprint({ foo: 'bar' });
+
+                    // then
+                    expect(is.string(sut.__blueprintId)).to.equal(true);
+                    expect(sut.__blueprintId.length).to.equal(8);
+                });
             });
 
-        });
+            describe('asynchronous validation', function () {
+                describe('when an object that implements a given Blueprint is validated', function () {
+                    var sut = sutSetup(),
+                        implementation = {
+                            num: 42,
+                            str: 'string',
+                            arr: [],
+                            currency: '42.42',
+                            bool: true,
+                            obj: {
+                                foo: 'bar'
+                            },
+                            func: function (arg1, arg2) {
+                                console.log(arg1, arg2);
+                            },
+                            dec: 42.42
+                        };
 
-    });
-    
-    describe('when an object that does not implement a given Blueprint is passed as an argument to signatureMatches', function () {
 
-        it('should pass false in as the second argument to the callback', function (done) {
-            // given
-            var sut = sutSetup(),
-                obj = {};
-
-            // when
-            sut.blueprint.signatureMatches(obj, function (err, result) {
-                // then
-                expect(result).to.equal(false);
-                done();
-            });
-
-        });
-        
-        it('should pass an array of errors in as the first argument to the callback', function (done) {
-            // given
-            var sut = sutSetup(),
-                obj = {};
-
-            // when
-            sut.blueprint.signatureMatches(obj, function (err, result) {
-                // then
-                expect(is.array(err)).to.equal(true);
-                expect(err.length).to.be.at.least(5);
-                done();
-            });
-
-        });
-        
-        it('should pass an array of errors in as the first argument to the callback', function (done) {
-            // given
-            var sut = sutSetup(),
-                obj = {
-                    num: 42,
-                    str: 'string',
-                    arr: [],
-                    currency: '42.42',
-                    bool: true,
-                    obj: {
-                        foo: 'bar'
-                    },
-                    dec: 42.42
-                };
-
-            // when
-            sut.blueprint.signatureMatches(obj, function (err, result) {
-                // then
-                expect(result).to.equal(false);
-
-                // there should be an error that a function is missing
-                // and another that it is missing arguments
-                // for a total of 2 errors
-                expect(err.length).to.equal(2);
-                done();
-            });
-
-        });
-
-    });
-    
-    describe('when a Blueprint property is an object and has a validate function', function () {
-    
-        it('should execute the validate function instead of using the built in validation', function (done) {
-            // given
-            var bp = new Blueprint({
-                    prop: {
-                        validate: function (implementationProperty, errorArray) {
+                    it('should pass TRUE in as the second argument to the callback', function (done) {
+                        // when
+                        Blueprint.validate(sut, implementation, function (err, result) {
                             // then
-                            expect(implementationProperty).to.equal(42);
+                            expect(result).to.equal(true);
                             done();
-                        }
-                    }
-                }),
-                implementation = {
-                    prop: 42
-                };
-            
-            // when
-            bp.signatureMatches(implementation, function (err, result) {
-                /*ingore: we're making sure the validate function was actually called*/
-            });
-        });
-        
-        it('should allow the validate function to affect the signatureMatches result', function (done) {
-            // given
-            var errorMessage = 'error message',
-                bp = new Blueprint({
-                    prop: {
-                        validate: function (implementationProperty, errorArray) {
+                        });
+                    });
+
+                    it('(Inline) should pass TRUE in as the second argument to the callback', function (done) {
+                        // when
+                        sut.signatureMatches(implementation, function (err, result) {
                             // then
-                            errorArray.push(errorMessage);
-                        }
-                    }
-                }),
-                implementation = {
-                    prop: 42
-                };
-            
-            // when
-            bp.signatureMatches(implementation, function (err, result) {
-                expect(err[0]).to.equal(errorMessage);
-                done();
+                            expect(result).to.equal(true);
+                            done();
+                        });
+                    });
+
+                    describe('and the implementation has additional properties', function () {
+                        var implementation = {
+                            num: 42,
+                            str: 'string',
+                            arr: [],
+                            currency: '42.42',
+                            bool: true,
+                            obj: {
+                                foo: 'bar'
+                            },
+                            func: function (arg1, arg2) {
+                                console.log(arg1, arg2);
+                            },
+                            dec: 42.42,
+                            foo: 'foo',
+                            bar: 'bar'
+                        };
+
+                        it('should pass TRUE in as the second argument to the callback', function (done) {
+                            // when
+                            Blueprint.validate(sut, implementation, function (err, result) {
+                                // then
+                                expect(result).to.equal(true);
+                                done();
+                            });
+                        });
+
+                        it('(Inline) should pass TRUE in as the second argument to the callback', function (done) {
+                            // when
+                            sut.signatureMatches(implementation, function (err, result) {
+                                // then
+                                expect(result).to.equal(true);
+                                done();
+                            });
+                        });
+                    });
+                });
+
+                describe('when an object that does NOT implement a given Blueprint is validated', function () {
+                    var sut = sutSetup(),
+                        implementation = {},
+                        implementation2 = {
+                            num: 42,
+                            str: 'string',
+                            arr: [],
+                            currency: '42.42',
+                            bool: true,
+                            obj: {
+                                foo: 'bar'
+                            },
+                            dec: 42.42
+                        };
+
+
+                    it('should pass FALSE in as the second argument to the callback', function (done) {
+                        // when
+                        Blueprint.validate(sut, implementation, function (err, result) {
+                            // then
+                            expect(result).to.equal(false);
+                            done();
+                        });
+                    });
+
+                    it('(Inline) should FALSE in as the second argument to the callback', function (done) {
+                        // when
+                        sut.signatureMatches(implementation, function (err, result) {
+                            // then
+                            expect(result).to.equal(false);
+                            done();
+                        });
+                    });
+
+                    it('should pass an array of errors as the first argument to the callback', function (done) {
+                        // when
+                        Blueprint.validate(sut, implementation, function (err) {
+                            // then
+                            expect(is.array(err)).to.equal(true);
+                            expect(err.length).to.be.at.least(5);
+                            done();
+                        });
+                    });
+
+                    it('(Inline) should pass an array of errors as the first argument to the callback', function (done) {
+                        // when
+                        sut.signatureMatches(implementation, function (err) {
+                            // then
+                            expect(is.array(err)).to.equal(true);
+                            expect(err.length).to.be.at.least(5);
+                            done();
+                        });
+                    });
+
+                    it('should pass an array of errors as the first argument to the callback', function (done) {
+                        // when
+                        Blueprint.validate(sut, implementation2, function (err) {
+                            // then
+                            expect(is.array(err)).to.equal(true);
+                            // there should be an error that a function is missing
+                            // and another that it is missing arguments
+                            // for a total of 2 errors
+                            expect(err.length).to.equal(2);
+                            done();
+                        });
+                    });
+
+                    it('(Inline) should pass an array of errors as the first argument to the callback', function (done) {
+                        // when
+                        sut.signatureMatches(implementation2, function (err) {
+                            // then
+                            expect(is.array(err)).to.equal(true);
+                            // there should be an error that a function is missing
+                            // and another that it is missing arguments
+                            // for a total of 2 errors
+                            expect(err.length).to.equal(2);
+                            done();
+                        });
+                    });
+
+                });
+
+                describe('when a Blueprint property has it\'s own validate function', function () {
+                    var expectedValidationErrorMessage = 'validation message',
+                        validSut = new Blueprint({
+                            prop: {
+                                validate: function (implementationProperty, errors, implementation) {
+                                    // then
+                                    expect(implementationProperty).to.equal(42);
+                                    expect(Array.isArray(errors)).to.equal(true);
+                                    expect(implementation.prop).to.equal(42);
+                                }
+                            }
+                        }),
+                        invalidSut = new Blueprint({
+                            prop: {
+                                validate: function (implementationProperty, errors) {
+                                    // then
+                                    errors.push(expectedValidationErrorMessage);
+                                }
+                            }
+                        }),
+                        implementation = {
+                            prop: 42
+                        };
+
+                    it('should receive three arguments', function (done) {
+                        // when
+                        Blueprint.validate(validSut, implementation, function (err, result) {
+                            // then
+                            expect(result).to.equal(true);
+                            done();
+                        });
+                    });
+
+                    it('(Inline) should receive three arguments', function (done) {
+                        // when
+                        validSut.signatureMatches(implementation, function (err, result) {
+                            // then
+                            expect(result).to.equal(true);
+                            done();
+                        });
+                    });
+
+                    it('should execute the validate function instead of using the built in validation', function (done) {
+                        // when
+                        Blueprint.validate(invalidSut, implementation, function (err, result) {
+                            // then
+                            expect(err[0]).to.equal(expectedValidationErrorMessage);
+                            expect(result).to.equal(false);
+                            done();
+                        });
+                    });
+
+                    it('(Inline) should execute the validate function instead of using the built in validation', function (done) {
+                        // when
+                        invalidSut.signatureMatches(implementation, function (err, result) {
+                            // then
+                            expect(err[0]).to.equal(expectedValidationErrorMessage);
+                            expect(result).to.equal(false);
+                            done();
+                        });
+                    });
+                });
+
+                describe('when a Blueprint property IS required', function () {
+                    var sut = new Blueprint({
+                            prop1: 'number',
+                            prop: {
+                                type: 'string',
+                                required: true
+                            }
+                        }),
+                        implementation = {
+                            prop1: 42
+                        };
+
+                    it('should require the property to have a value', function (done) {
+                        // when
+                        Blueprint.validate(sut, implementation, function (err, result) {
+                            // then
+                            expect(result).to.equal(false);
+                            done();
+                        });
+                    });
+
+                    it('(Inline) should require the property to have a value', function (done) {
+                        // when
+                        sut.signatureMatches(implementation, function (err, result) {
+                            // then
+                            expect(result).to.equal(false);
+                            done();
+                        });
+                    });
+                });
+
+                describe('when a Blueprint property is NOT required', function () {
+                    var sut = new Blueprint({
+                            prop1: 'number',
+                            prop: {
+                                type: 'string',
+                                required: false
+                            }
+                        }),
+                        implementation = {
+                            prop1: 42
+                        };
+
+                    it('should NOT require the property to have a value', function (done) {
+                        // when
+                        Blueprint.validate(sut, implementation, function (err, result) {
+                            // then
+                            expect(result).to.equal(true);
+                            done();
+                        });
+                    });
+
+                    it('(Inline) should NOT require the property to have a value', function (done) {
+                        // when
+                        sut.signatureMatches(implementation, function (err, result) {
+                            // then
+                            expect(result).to.equal(true);
+                            done();
+                        });
+                    });
+                });
             });
-        });
-        
-    });
-    
-    describe('when the sync version of signatureMatches is used', function () {
 
-        it('should behave synchronously, with the same information that is available in the async signatureMatches', function () {
-            // given
-            var sut = sutSetup(),
-                actual,
-                obj = {
-                    num: 42,
-                    str: 'string',
-                    arr: [],
-                    currency: '42.42',
-                    bool: true,
-                    obj: {
-                        foo: 'bar'
-                    },
-                    func: function (arg1, arg2) {},
-                    dec: 42.42
+            describe('synchronous validation', function () {
+                describe('when an object that implements a given Blueprint is validated', function () {
+                    var sut = sutSetup(),
+                        implementation = {
+                            num: 42,
+                            str: 'string',
+                            arr: [],
+                            currency: '42.42',
+                            bool: true,
+                            obj: {
+                                foo: 'bar'
+                            },
+                            func: function (arg1, arg2) {
+                                console.log(arg1, arg2);
+                            },
+                            dec: 42.42
+                        };
+
+
+                    it('should return TRUE for the `result` property', function () {
+                        // when
+                        var actual = Blueprint.validate(sut, implementation);
+
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('(Inline) should return TRUE for the `result` property', function () {
+                        // when
+                        var actual = sut.syncSignatureMatches(implementation);
+
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    describe('and the implementation has additional properties', function () {
+                        var implementation = {
+                            num: 42,
+                            str: 'string',
+                            arr: [],
+                            currency: '42.42',
+                            bool: true,
+                            obj: {
+                                foo: 'bar'
+                            },
+                            func: function (arg1, arg2) {
+                                console.log(arg1, arg2);
+                            },
+                            dec: 42.42,
+                            foo: 'foo',
+                            bar: 'bar'
+                        };
+
+                        it('should return TRUE for the `result` property', function () {
+                            // when
+                            var actual = Blueprint.validate(sut, implementation);
+
+                            // then
+                            expect(actual.result).to.equal(true);
+                        });
+
+                        it('(Inline) should return TRUE for the `result` property', function () {
+                            // when
+                            var actual = sut.syncSignatureMatches(implementation);
+
+                            // then
+                            expect(actual.result).to.equal(true);
+                        });
+                    });
+                });
+
+                describe('when an object that does NOT implement a given Blueprint is validated', function () {
+                    var sut = sutSetup(),
+                        implementation = {},
+                        implementation2 = {
+                            num: 42,
+                            str: 'string',
+                            arr: [],
+                            currency: '42.42',
+                            bool: true,
+                            obj: {
+                                foo: 'bar'
+                            },
+                            dec: 42.42
+                        };
+
+
+                    it('should return TRUE for the `result` property', function () {
+                        // when
+                        var actual = Blueprint.validate(sut, implementation);
+                        // then
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('(Inline) should return TRUE for the `result` property', function () {
+                        // when
+                        var actual = sut.syncSignatureMatches(implementation);
+                        // then
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('should return an array of errors', function () {
+                        // when
+                        var actual = Blueprint.validate(sut, implementation);
+                        // then
+                        expect(is.array(actual.errors)).to.equal(true);
+                        expect(actual.errors.length).to.be.at.least(5);
+                    });
+
+                    it('(Inline) should return an array of errors', function () {
+                        // when
+                        var actual = sut.syncSignatureMatches(implementation);
+                        // then
+                        expect(is.array(actual.errors)).to.equal(true);
+                        expect(actual.errors.length).to.be.at.least(5);
+                    });
+
+                    it('should return an array of errors', function () {
+                        // when
+                        var actual = Blueprint.validate(sut, implementation2);
+                        // then
+                        expect(is.array(actual.errors)).to.equal(true);
+                        // there should be an error that a function is missing
+                        // and another that it is missing arguments
+                        // for a total of 2 errors
+                        expect(actual.errors.length).to.equal(2);
+                    });
+
+                    it('(Inline) should return an array of errors', function () {
+                        // when
+                        var actual = sut.syncSignatureMatches(implementation2);
+                        // then
+                        expect(is.array(actual.errors)).to.equal(true);
+                        // there should be an error that a function is missing
+                        // and another that it is missing arguments
+                        // for a total of 2 errors
+                        expect(actual.errors.length).to.equal(2);
+                    });
+
+                });
+
+                describe('when a Blueprint property has it\'s own validate function', function () {
+                    var expectedValidationErrorMessage = 'validation message',
+                        validSut = new Blueprint({
+                            prop: {
+                                validate: function (implementationProperty, errors, implementation) {
+                                    // then
+                                    expect(implementationProperty).to.equal(42);
+                                    expect(Array.isArray(errors)).to.equal(true);
+                                    expect(implementation.prop).to.equal(42);
+                                }
+                            }
+                        }),
+                        invalidSut = new Blueprint({
+                            prop: {
+                                validate: function (implementationProperty, errors) {
+                                    // then
+                                    errors.push(expectedValidationErrorMessage);
+                                }
+                            }
+                        }),
+                        implementation = {
+                            prop: 42
+                        };
+
+                    it('should receive three arguments', function () {
+                        // when
+                        var actual = Blueprint.validate(validSut, implementation);
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('(Inline) should receive three arguments', function () {
+                        // when
+                        var actual = validSut.syncSignatureMatches(implementation);
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('should execute the validate function instead of using the built in validation', function () {
+                        // when
+                        var actual = Blueprint.validate(invalidSut, implementation);
+                        // then
+                        expect(actual.errors[0]).to.equal(expectedValidationErrorMessage);
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('(Inline) should execute the validate function instead of using the built in validation', function () {
+                        // when
+                        var actual = invalidSut.syncSignatureMatches(implementation);
+                        // then
+                        expect(actual.errors[0]).to.equal(expectedValidationErrorMessage);
+                        expect(actual.result).to.equal(false);
+                    });
+                });
+
+                describe('when a Blueprint property IS required', function () {
+                    var sut = new Blueprint({
+                            prop1: 'number',
+                            prop: {
+                                type: 'string',
+                                required: true
+                            }
+                        }),
+                        implementation = {
+                            prop1: 42
+                        };
+
+                    it('should require the property to have a value', function () {
+                        // when
+                        var actual = Blueprint.validate(sut, implementation);
+                        // then
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('(Inline) should require the property to have a value', function () {
+                        // when
+                        var actual = sut.syncSignatureMatches(implementation);
+                        // then
+                        expect(actual.result).to.equal(false);
+                    });
+                });
+
+                describe('when a Blueprint property is NOT required', function () {
+                    var sut = new Blueprint({
+                            prop1: 'number',
+                            prop: {
+                                type: 'string',
+                                required: false
+                            }
+                        }),
+                        implementation = {
+                            prop1: 42
+                        };
+
+                    it('should NOT require the property to have a value', function () {
+                        // when
+                        var actual = Blueprint.validate(sut, implementation);
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('(Inline) should NOT require the property to have a value', function () {
+                        // when
+                        var actual = sut.syncSignatureMatches(implementation);
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+                });
+            });
+
+            describe('when blueprints are merged', function () {
+                var setup = function () {
+                    return {
+                        bp1: new Blueprint({
+                            __blueprintId: 'BP1',
+                            name: 'string'
+                        }),
+                        bp2: new Blueprint({
+                            __blueprintId: 'BP2',
+                            name: 'number',
+                            description: 'string'
+                        }),
+                        bp3: new Blueprint({
+                            __blueprintId: 'BP3',
+                            name: 'number',
+                            description: 'number',
+                            something: 'string'
+                        })
+                    };
                 };
 
-            // when
-            actual = sut.blueprint.syncSignatureMatches(obj);
-            
-            // then
-            expect(actual.result).to.equal(true);
-        });
+                it('should combine the blueprints into one, retaining the id of the first blueprint', function (done) {
+                    // given
+                    var sut = setup();
 
-    });
+                    // when
+                    Blueprint.merge([sut.bp1, sut.bp2, sut.bp3], function (err, actual) {
+                        // then
+                        expect(err).to.equal(null);
+                        expect(actual.__blueprintId).to.equal(sut.bp1.__blueprintId);
+                        expect(actual.props.name).to.equal('string');
+                        expect(actual.props.description).to.equal('string');
+                        expect(actual.props.something).to.equal('string');
+                        done();
+                    });
+                });
 
-});
+                it('should combine the blueprints into one, retaining the id of the first blueprint', function (done) {
+                    // given
+                    var sut = setup();
+
+                    // when
+                    Blueprint.merge([sut.bp3, sut.bp2, sut.bp1], function (err, actual) {
+                        // then
+                        expect(err).to.equal(null);
+                        expect(actual.__blueprintId).to.equal(sut.bp3.__blueprintId);
+                        done();
+                    });
+                });
+
+                it('should respect precedence from left to right', function (done) {
+                    // given
+                    var sut = setup();
+
+                    // when
+                    Blueprint.merge([sut.bp1, sut.bp2, sut.bp3], function (err, actual) {
+                        // then
+                        expect(err).to.equal(null);
+                        expect(actual.__blueprintId).to.equal(sut.bp1.__blueprintId);
+                        expect(actual.props.name).to.equal('string');
+                        expect(actual.props.description).to.equal('string');
+                        expect(actual.props.something).to.equal('string');
+                        done();
+                    });
+                });
+            });
+
+            describe('when blueprints are synchronously merged', function () {
+                var setup = function () {
+                    return {
+                        bp1: new Blueprint({
+                            __blueprintId: 'BP1',
+                            name: 'string'
+                        }),
+                        bp2: new Blueprint({
+                            __blueprintId: 'BP2',
+                            name: 'number',
+                            description: 'string'
+                        }),
+                        bp3: new Blueprint({
+                            __blueprintId: 'BP3',
+                            name: 'number',
+                            description: 'number',
+                            something: 'string'
+                        })
+                    };
+                };
+
+                it('should combine the blueprints into one, retaining the id of the first blueprint', function () {
+                    // given
+                    var sut = setup();
+
+                    // when
+                    var actual = Blueprint.syncMerge([sut.bp1, sut.bp2, sut.bp3]);
+
+                    // then
+                    expect(actual.__blueprintId).to.equal(sut.bp1.__blueprintId);
+                    expect(actual.props.name).to.equal('string');
+                    expect(actual.props.description).to.equal('string');
+                    expect(actual.props.something).to.equal('string');
+                });
+
+                it('should combine the blueprints into one, retaining the id of the first blueprint', function () {
+                    // given
+                    var sut = setup();
+
+                    // when
+                    var actual = Blueprint.syncMerge([sut.bp3, sut.bp2, sut.bp1]);
+                    // then
+                    expect(actual.__blueprintId).to.equal(sut.bp3.__blueprintId);
+                });
+
+                it('should respect precedence from left to right', function () {
+                    // given
+                    var sut = setup();
+
+                    // when
+                    var actual = Blueprint.syncMerge([sut.bp1, sut.bp2, sut.bp3]);
+                    // then
+                    expect(actual.__blueprintId).to.equal(sut.bp1.__blueprintId);
+                    expect(actual.props.name).to.equal('string');
+                    expect(actual.props.description).to.equal('string');
+                    expect(actual.props.something).to.equal('string');
+                });
+
+                it('(Inline) should combine the blueprints into one, retaining the id of the first blueprint', function () {
+                    // given
+                    var sut = setup();
+
+                    // when
+                    var actual = sut.bp1.inherits(sut.bp2);
+
+                    // then
+                    expect(actual.__blueprintId).to.equal(sut.bp1.__blueprintId);
+                    expect(actual.props.name).to.equal('string');
+                    expect(actual.props.description).to.equal('string');
+                    expect(sut.bp1.props.name).to.equal('string');
+                    expect(sut.bp1.props.description).to.equal('string');
+                });
+
+                it('(Inline) should combine the blueprints into one, retaining the id of the first blueprint', function () {
+                    // given
+                    var sut = setup();
+
+                    // when
+                    var actual = sut.bp3.inherits(sut.bp2);
+                    // then
+                    expect(actual.__blueprintId).to.equal(sut.bp3.__blueprintId);
+                });
+
+                it('(Inline) should respect precedence from left to right', function () {
+                    // given
+                    var sut = setup();
+
+                    // when
+                    var actual = sut.bp2.inherits(sut.bp1);
+                    // then
+                    expect(actual.__blueprintId).to.equal(sut.bp2.__blueprintId);
+                    expect(actual.props.name).to.equal('number');
+                    expect(actual.props.description).to.equal('string');
+                    expect(sut.bp2.props.name).to.equal('number');
+                    expect(sut.bp2.props.description).to.equal('string');
+                });
+            });
+
+            describe('when defining Blueprint functions', function () {
+                it('The args property should be optional', function () {
+                    // given
+                    var bp1 = new Blueprint({
+                            func: {
+                                type: 'function'
+                            }
+                        }),
+                        imp1 = {
+                            func: function () {}
+                        },
+                        actual;
+
+                    // when
+                    actual = bp1.syncSignatureMatches(imp1);
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                });
+
+                it('can be defined without an object literal', function () {
+                    // given
+                    var bp1 = new Blueprint({
+                            func: 'function'
+                        }),
+                        imp1 = {
+                            func: function () {}
+                        },
+                        actual;
+
+                    // when
+                    actual = bp1.syncSignatureMatches(imp1);
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                });
+            });
+
+            describe('when a Blueprint has nested Blueprints', function () {
+                it('should return a happy result if both Blueprints are satisfied', function () {
+                    // given
+                    var actual,
+                        bp1 = new Blueprint({
+                            name: 'string'
+                        }),
+                        bp2 = new Blueprint({
+                            description: 'string',
+                            parent: {
+                                type: 'blueprint',
+                                blueprint: bp1
+                            }
+                        }),
+                        impl = {
+                            description: 'hello',
+                            parent: {
+                                name: 'foo'
+                            }
+                        };
+
+                    // when
+                    actual = bp2.syncSignatureMatches(impl);
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                    expect(actual.errors).to.equal(null);
+
+                });
+
+                it('should return a sad result if both Blueprints are not satisfied', function () {
+                    // given
+                    var actual,
+                        bp1 = new Blueprint({
+                            name: 'string',
+                            desc: 'string',
+                            lol: 'string'
+                        }),
+                        bp2 = new Blueprint({
+                            description: 'string',
+                            parent: {
+                                type: 'blueprint',
+                                blueprint: bp1
+                            }
+                        }),
+                        impl = {
+                            description: 'hello',
+                            parent: {
+                                name: 'foo'
+                            }
+                        };
+
+                    // when
+                    actual = bp2.syncSignatureMatches(impl);
+
+                    // then
+                    expect(actual.result).to.equal(false);
+                    expect(actual.errors.length).to.equal(2);
+
+                });
+            });
+
+        }); // /describe Blueprint
+    } // /Spec
+
+}());
