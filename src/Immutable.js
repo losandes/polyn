@@ -88,10 +88,14 @@
                     schema.__skipValdation !== true &&
                     !blueprint.syncSignatureMatches(values).result
                 ) {
-                    return new InvalidArgumentException(
+                    var err = new InvalidArgumentException(
                         new Error('The argument passed to the constructor is not valid'),
                         blueprint.syncSignatureMatches(values).errors
                     );
+
+                    config.onError(err);
+
+                    return err;
                 }
 
                 try {
@@ -132,8 +136,8 @@
             // Validates an instance of an Immutable against it's schema
             // @param instance: The instance that is being validated
             */
-            Constructor.validate = function (instance) {
-                return blueprint.syncSignatureMatches(instance);
+            Constructor.validate = function (instance, callback) {
+                return Blueprint.validate(blueprint, instance, callback);
             };
 
             /*
