@@ -15,8 +15,17 @@
         console.log('Unable to define module: UNKNOWN RUNTIME');
     }
 
-    function Spec (Immutable, describe, it, expect) {
+    function Spec (Immutable, describe, it, expect, beforeEach, afterEach) {
         describe('Immutable', function () {
+            var setDefaultConfiguration = function () {
+                Immutable.configure({
+                    onError: function () { /*swallow*/ }
+                });
+            };
+
+            // SET DEFAULTS NOW
+            setDefaultConfiguration();
+
             describe('when given a VALID argument', function () {
                 it('should NOT return an exception', function () {
                     // given
@@ -63,6 +72,9 @@
             });
 
             describe('when attempting to set a property', function () {
+                afterEach(setDefaultConfiguration);
+
+
                 it('should return an exception', function (done) {
                     // given
                     var Sut, sut, actual;
@@ -73,9 +85,6 @@
                             expect(sut.str).to.equal('bar');
                             expect(err.isException).to.equal(true);
                             expect(err.type).to.equal('ReadOnlyViolation');
-                            // unconfigure it, so this test doesn't receive feedback from other tests
-                            Immutable.configure({ onError: function () {}});
-
                             done();
                         }
                     });
@@ -97,6 +106,8 @@
             });
 
             describe('when Immutables have nested Immutables', function () {
+                afterEach(setDefaultConfiguration);
+
                 it('should cascade', function () {
                     // given
                     var Sut = makeSut(),
@@ -141,13 +152,9 @@
                     Immutable.configure({
                         onError: function (err) {
                             // then
-                            console.log('h2');
                             expect(sut.nested.str).to.equal('baz');
                             expect(err.isException).to.equal(true);
                             expect(err.type).to.equal('ReadOnlyViolation');
-                            // unconfigure it, so this test doesn't receive feedback from other tests
-                            Immutable.configure({ onError: function () {}});
-
                             done();
                         }
                     });

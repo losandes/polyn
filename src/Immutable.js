@@ -295,7 +295,6 @@
             if (typeof cfg.onError === 'function') {
                 config.onError = cfg.onError;
             }
-
         };
 
         return Immutable;

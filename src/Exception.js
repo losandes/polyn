@@ -1,7 +1,12 @@
 (function () {
     'use strict';
 
-    var errorTypeWarning = '[POLYN] EXCEPTION WARNING: You should always pass an Error to Exception, to preserver your stack trace';
+    var errorTypeWarning = '[POLYN] EXCEPTION WARNING: You should always pass an Error to Exception, to preserve your stack trace',
+        config = {
+            onWarning: function (message) {
+                console.log(message);
+            }
+        };
 
     /*
     // Exports
@@ -40,10 +45,10 @@
         var err = error;
 
         if (typeof error === 'string') {
-            console.log(errorTypeWarning);
+            config.onWarning(errorTypeWarning);
             err = new Error(error);
         } else if (!error) {
-            console.log(errorTypeWarning);
+            config.onWarning(errorTypeWarning);
             err = new Error('UNKNOWN');
         }
 
@@ -81,5 +86,13 @@
             isException: true
         };
     } // /ExceptionOfType
+
+    Exception.configure = function (cfg) {
+        cfg = cfg || {};
+
+        if (typeof cfg.onWarning === 'function') {
+            config.onWarning = cfg.onWarning;
+        }
+    };
 
 }());

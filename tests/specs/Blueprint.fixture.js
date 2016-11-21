@@ -15,9 +15,10 @@
         console.log('Unable to define module: UNKNOWN RUNTIME');
     }
 
-    function Spec (Blueprint, id, is, describe, it, expect) {
+    function Spec (Blueprint, id, is, describe, it, expect, beforeEach, afterEach) {
         describe('Blueprint', function () {
-            var sutSetup;
+            var sutSetup,
+                setDefaultConfiguration;
 
             sutSetup = function () {
                 var bp = new Blueprint({
@@ -40,6 +41,15 @@
 
                 return bp;
             };
+
+            setDefaultConfiguration = function () {
+                Blueprint.configure({
+                    onError: function () { /*swallow*/ }
+                });
+            };
+
+            // SET DEFAULT CONFIG NOW
+            setDefaultConfiguration();
 
             describe('when a Blueprint is constructed and it has the __blueprintId property', function () {
                 it('should maintain the value of the __blueprintId', function () {
@@ -865,6 +875,87 @@
                     expect(actual.result).to.equal(false);
                     expect(actual.errors.length).to.equal(2);
 
+                });
+            });
+
+            describe('validation memory', function () {
+                it('should remember validation by default', function () {
+                    // given
+                    var expectedId = 'MEMORY',
+                        blueprint = new Blueprint({
+                            __blueprintId: expectedId,
+                            name: 'string'
+                        }),
+                        implementation = {
+                            name: 'Trillian'
+                        };
+
+                    // when
+                    blueprint.validate(implementation);
+
+                    // then
+                    expect(implementation.__interfaces[expectedId]).to.equal(true);
+                });
+
+                describe('when compatibility is set after 2016-11-19', function () {
+                    beforeEach(function () {
+                        Blueprint.configure({
+                            compatibility: '2016-11-21'
+                        });
+                    });
+
+                    afterEach(function () {
+                        setDefaultConfiguration();
+                    });
+
+                    it('should NOT remember validation when compatibility is set after 2016-11-19', function () {
+                        // given
+                        var blueprint = new Blueprint({
+                                __blueprintId: 'MEMORY',
+                                name: 'string'
+                            }),
+                            implementation = {
+                                name: 'Trillian'
+                            };
+
+                        // when
+                        blueprint.validate(implementation);
+
+                        // then
+                        expect(implementation.__interfaces).to.equal(undefined);
+                        expect(implementation.__blueprints).to.equal(undefined);
+                    });
+                });
+
+                describe('when compatibility is set after 2016-11-19, but rememberValidation is turned on', function () {
+                    beforeEach(function () {
+                        Blueprint.configure({
+                            compatibility: '2016-11-21',
+                            rememberValidation: true
+                        });
+                    });
+
+                    afterEach(function () {
+                        setDefaultConfiguration();
+                    });
+
+                    it('should NOT remember validation when compatibility is set after 2016-11-19', function () {
+                        // given
+                        var expectedId = 'MEMORY',
+                            blueprint = new Blueprint({
+                                __blueprintId: expectedId,
+                                name: 'string'
+                            }),
+                            implementation = {
+                                name: 'Trillian'
+                            };
+
+                        // when
+                        blueprint.validate(implementation);
+
+                        // then
+                        expect(implementation.__blueprints[expectedId]).to.equal(true);
+                    });
                 });
             });
 

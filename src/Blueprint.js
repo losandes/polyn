@@ -65,23 +65,30 @@
             validateDecimalWithPlaces,
             validateBooleanArgument,
             validateNestedBlueprint,
+            addValidationMemoryProperty,
+            rememberValidation,
+            isAlreadyValidated,
+            dateIsBefore,
+            dateIsAfter,
             makeErrorMessage,
             setReadOnlyProp,
-            config = {
-                rememberValidation: true,
-                compatibility: 'v0.3.0'
+            setDefaultCompatibility,
+            setDefaultConfiguration,
+            config = {},
+            versions = {
+                v20161119: new Date('2016-11-19'),
+                v20161120: new Date('2016-11-20')
             },
             locale = {
                 errors: {
-                    blueprint: {
-                        requiresImplementation: 'An implementation is required to create a new instance of an interface',
-                        requiresProperty: 'This implementation does not satisfy blueprint, {{blueprint}}. It should have the property, {{property}}, with type, {{type}}.',
-                        requiresArguments: 'This implementation does not satisfy blueprint, {{blueprint}}. The function, {{property}}, is missing arguments',
-                        missingConstructorArgument: 'An object literal is required when constructing a Blueprint',
-                        missingSignaturesMatchBlueprintArgument: 'The `blueprint` argument is required',
-                        missingSignaturesMatchImplementationArgument: 'The `implementation` argument is required',
-                        missingSignaturesMatchCallbackArgument: 'The `callback` argument is required'
-                    }
+                    requiresImplementation: 'An implementation is required to create a new instance of an interface',
+                    requiresProperty: 'This implementation does not satisfy blueprint, {{blueprint}}. It should have the property, {{property}}, with type, {{type}}.',
+                    requiresArguments: 'This implementation does not satisfy blueprint, {{blueprint}}. The function, {{property}}, is missing arguments',
+                    missingConstructorArgument: 'An object literal is required when constructing a Blueprint',
+                    missingSignaturesMatchBlueprintArgument: 'The `blueprint` argument is required',
+                    missingSignaturesMatchImplementationArgument: 'The `implementation` argument is required',
+                    missingSignaturesMatchCallbackArgument: 'The `callback` argument is required',
+                    configurationCompatibilityIsNotValid: 'The date you tried to set the Blueprint compatibility to is not valid'
                 }
             };
 
@@ -91,21 +98,11 @@
         signatureMatches = function (implementation, blueprint, callback) {
             var newCallback;
 
-            if (config.rememberValidation) {
-                if (config.compatibility === 'v0.3.0') {
-                    implementation.__interfaces = implementation.__interfaces || {};
-                } else {
-                    implementation.__blueprints = implementation.__blueprints || {};
-                }
-            }
+            implementation = addValidationMemoryProperty(implementation);
 
             newCallback = function (err, result) {
-                if (config.rememberValidation && !err) {
-                    if (config.compatibility === 'v0.3.0') {
-                        implementation.__interfaces[blueprint.__blueprintId] = true;
-                    } else {
-                        implementation.__blueprints[blueprint.__blueprintId] = true;
-                    }
+                if (!err) {
+                    rememberValidation(implementation, blueprint);
                 }
 
                 if (typeof callback === 'function') {
@@ -122,11 +119,11 @@
         syncSignatureMatches = function (implementation, blueprint) {
             var validationResult;
 
-            implementation.__interfaces = implementation.__interfaces || {};
+            implementation = addValidationMemoryProperty(implementation);
             validationResult = syncValidateSignature(implementation, blueprint);
 
             if (validationResult.result) {
-                implementation.__interfaces[blueprint.__blueprintId] = true;
+                rememberValidation(implementation, blueprint);
             }
 
             return validationResult;
@@ -157,7 +154,7 @@
                 prop;
 
             // if the implementation was already validated previously, skip validation
-            if (implementation.__interfaces[blueprint.__blueprintId]) {
+            if (isAlreadyValidated(implementation, blueprint)) {
                 return {
                     errors: null,
                     result: true
@@ -225,20 +222,13 @@
             }
         };
 
-        makeErrorMessage = function (message, blueprintId, propertyName, propertyType) {
-            return message
-                .replace(/{{blueprint}}/gi, blueprintId)
-                .replace(/{{property}}/gi, propertyName)
-                .replace(/{{type}}/gi, propertyType);
-        };
-
         /*
         // validates that the property type matches the expected blueprint property type
         // i.e. that implementation.num is a number, if the blueprint has a property: num: 'number'
         */
         validatePropertyType = function (blueprintId, implementation, propertyName, propertyType, errors) {
             if (is.function(is.not[propertyType]) && is.not[propertyType](implementation[propertyName])) {
-                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, propertyType));
+                errors.push(makeErrorMessage(locale.errors.requiresProperty, blueprintId, propertyName, propertyType));
             }
         };
 
@@ -261,7 +251,7 @@
             // then if argumentsAreValid is not true, push errors into the error array
             if (!argumentsAreValid) {
                 try { argumentsString = propertyArguments.join(', '); } catch (e) { argumentsString = propertyArguments.toString(); }
-                errors.push(makeErrorMessage(locale.errors.blueprint.requiresArguments, blueprintId, propertyName, argumentsString));
+                errors.push(makeErrorMessage(locale.errors.requiresArguments, blueprintId, propertyName, argumentsString));
             }
         };
 
@@ -270,13 +260,13 @@
         */
         validateDecimalWithPlaces = function (blueprintId, implementation, propertyName, places, errors) {
             if (is.not.decimal(implementation[propertyName], places)) {
-                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, 'decimal with ' + places + ' places'));
+                errors.push(makeErrorMessage(locale.errors.requiresProperty, blueprintId, propertyName, 'decimal with ' + places + ' places'));
             }
         };
 
         validateBooleanArgument = function (blueprintId, implementation, propertyName, errors) {
             if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
-                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, 'boolean'));
+                errors.push(makeErrorMessage(locale.errors.requiresProperty, blueprintId, propertyName, 'boolean'));
             }
         };
 
@@ -291,6 +281,51 @@
             }
         };
 
+        /*
+        // Ensures that a __blueprints object exists, if appropriate
+        */
+        addValidationMemoryProperty = function (implementation) {
+            if (config.rememberValidation) {
+                implementation[config.memoryPropertName] = implementation[config.memoryPropertName] || {};
+            }
+
+            return implementation;
+        };
+
+        /*
+        // Adds the given blueprint to the validation memory
+        */
+        rememberValidation = function (implementation, blueprint) {
+            if (config.rememberValidation) {
+                implementation[config.memoryPropertName][blueprint.__blueprintId] = true;
+            }
+
+            return implementation;
+        };
+
+        /*
+        // Checks to see if this blueprint was already processed
+        */
+        isAlreadyValidated = function (implementation, blueprint) {
+            return implementation[config.memoryPropertName] &&
+                implementation[config.memoryPropertName][blueprint.__blueprintId];
+        };
+
+        dateIsBefore = function (baselineDate, comparisonDate) {
+            return comparisonDate < baselineDate;
+        };
+
+        dateIsAfter = function (baselineDate, comparisonDate) {
+            return comparisonDate > baselineDate;
+        };
+
+        makeErrorMessage = function (message, blueprintId, propertyName, propertyType) {
+            return message
+                .replace(/{{blueprint}}/gi, blueprintId)
+                .replace(/{{property}}/gi, propertyName)
+                .replace(/{{type}}/gi, propertyType);
+        };
+
         setReadOnlyProp = function (obj, name, val) {
             Object.defineProperty(obj, name, {
                 get: function () {
@@ -298,7 +333,7 @@
                 },
                 set: function () {
                     var err = new Exception('ReadOnlyViolation', new Error(name + ' is read-only'));
-                    console.log(err);
+                    config.onError(err);
                     return err;
                 },
                 // this property should show up when this object's property names are enumerated
@@ -359,12 +394,12 @@
             }
 
             if (is.not.defined(blueprint)) {
-                callback([locale.errors.blueprint.missingSignaturesMatchBlueprintArgument]);
+                callback([locale.errors.missingSignaturesMatchBlueprintArgument]);
                 return;
             }
 
             if (is.not.defined(implementation)) {
-                callback([locale.errors.blueprint.missingSignaturesMatchImplementationArgument]);
+                callback([locale.errors.missingSignaturesMatchImplementationArgument]);
                 return;
             }
 
@@ -376,14 +411,14 @@
         Blueprint.syncValidate = function (blueprint, implementation) {
             if (is.not.defined(blueprint)) {
                 return {
-                    errors: [locale.errors.blueprint.missingSignaturesMatchBlueprintArgument],
+                    errors: [locale.errors.missingSignaturesMatchBlueprintArgument],
                     result: false
                 };
             }
 
             if (is.not.defined(implementation)) {
                 return {
-                    errors: [locale.errors.blueprint.missingSignaturesMatchImplementationArgument],
+                    errors: [locale.errors.missingSignaturesMatchImplementationArgument],
                     result: false
                 };
             }
@@ -433,17 +468,55 @@
             return blueprint1;
         };
 
+        setDefaultCompatibility = function (cfg) {
+            if (is.string(cfg.compatibility)) {
+                try {
+                    config.compatibility = new Date(cfg.compatibility);
+                } catch (e) {
+                    config.compatibility =  new Date('2016-11-19');
+                    console.log(locale.errors.configurationCompatibilityIsNotValid);
+                }
+            } else if (is.date(cfg.compatibility)) {
+                config.compatibility = cfg.compatibility;
+            } else { // default
+                config.compatibility =  new Date('2016-11-19');
+            }
+        };
+
+        setDefaultConfiguration = function () {
+            if (dateIsAfter(versions.v20161119, config.compatibility)) {
+                config.rememberValidation =  false;
+                config.memoryPropertName = '__blueprints';
+            } else {
+                config.rememberValidation =  true;
+                config.memoryPropertName = '__interfaces';
+            }
+
+            config.onError = function (message) {
+                console.log(message);
+            };
+        };
+
         Blueprint.configure = function (cfg) {
             cfg = cfg || {};
 
-            if (typeof cfg.rememberValidation !== 'undefined') {
+            setDefaultCompatibility(cfg);
+            setDefaultConfiguration();
+
+            if (is.defined(cfg.rememberValidation)) {
                 config.rememberValidation = cfg.rememberValidation;
             }
 
-            if (typeof cfg.compatibility !== 'undefined') {
-                config.compatibility = cfg.compatibility;
+            if (is.function(cfg.onError)) {
+                config.onError = cfg.onError;
             }
+
+            // return a copy of the config
+            return JSON.parse(JSON.stringify(config));
         };
+
+        // SET CONFIGURATION DEFAULTS
+        Blueprint.configure();
 
         return Blueprint;
     } // /Ctor

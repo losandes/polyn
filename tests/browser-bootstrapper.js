@@ -21,7 +21,7 @@
     idFixture.run(id, describe, it, chai.expect);
     asyncFixture.run(async, describe, it);
     ExceptionFixture.run(Exception, describe, it, chai.expect);
-    BlueprintFixture.run(Blueprint, id, is, describe, it, chai.expect);
-    ImmutableFixture.run(Immutable, describe, it, chai.expect);
+    BlueprintFixture.run(Blueprint, id, is, describe, it, chai.expect, beforeEach, afterEach);
+    ImmutableFixture.run(Immutable, describe, it, chai.expect, beforeEach, afterEach);
 
 }(window.polyn, window.fixtures));

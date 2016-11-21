@@ -18,6 +18,11 @@
     function Spec (Exception, describe, it, expect) {
         describe('Exception', function () {
 
+            // squash the console ouput
+            Exception.configure({
+                onWarning: function () { /*swallow*/ }
+            });
+
             describe('when an Exception is created', function () {
                 it('should expose the first argument as the `type`', function () {
                     // given
