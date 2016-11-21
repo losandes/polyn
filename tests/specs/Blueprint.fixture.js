@@ -1105,6 +1105,151 @@
                 });
             });
 
+            describe('regular expressions', function () {
+                describe('when the expected value type is a regular expression', function () {
+                    it('should validate the value', function () {
+                        // given
+                        var bp = new Blueprint({
+                            expression: 'regexp'
+                        });
+
+                        // when
+                        var actual = bp.validate({
+                            expression: /^book$/
+                        });
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(false);
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('should validate the value', function () {
+                        // given
+                        var bp = new Blueprint({
+                            expression: 'regexp'
+                        });
+
+                        // when
+                        var actual = bp.validate({
+                            expression: 'book'
+                        });
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(true);
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('should validate the value', function () {
+                        // given
+                        var bp = new Blueprint({
+                            expression: {
+                                type: 'regexp',
+                                required: false
+                            }
+                        });
+
+                        // when
+                        var actual = bp.validate({
+                            expression: /^book$/
+                        });
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(false);
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('should validate the value', function () {
+                        // given
+                        var bp = new Blueprint({
+                            expression: {
+                                type: 'regexp',
+                                required: false
+                            }
+                        });
+
+                        // when
+                        var actual = bp.validate({});
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(false);
+                        expect(actual.result).to.equal(true);
+                    });
+                });
+
+                describe('when the value should be validated against an expression', function () {
+                    it('should validate the value', function () {
+                        // given
+                        var bp = new Blueprint({
+                            expression: /^book$/
+                        });
+
+                        // when
+                        var actual = bp.validate({
+                            expression: 'book'
+                        });
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(false);
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('should validate the value', function () {
+                        // given
+                        var bp = new Blueprint({
+                            __blueprintId: 'REGEXP1',
+                            exp: /^book$/
+                        });
+
+                        // when
+                        var actual = bp.validate({
+                            exp: 'frank'
+                        });
+                        
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(true);
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('should validate the value', function () {
+                        // given
+                        var bp = new Blueprint({
+                            expression: {
+                                type: 'expression',
+                                expression: /^book$/,
+                                required: false
+                            }
+                        });
+
+                        // when
+                        var actual = bp.validate({
+                            expression: 'books!'
+                        });
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(true);
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('should validate the value', function () {
+                        // given
+                        var bp = new Blueprint({
+                            expression: {
+                                type: 'expression',
+                                expression: /^book$/,
+                                required: false
+                            }
+                        });
+
+                        // when
+                        var actual = bp.validate({});
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(false);
+                        expect(actual.result).to.equal(true);
+                    });
+                });
+            });
+
         }); // /describe Blueprint
     } // /Spec
 

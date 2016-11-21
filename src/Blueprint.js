@@ -61,6 +61,7 @@
             validateDecimalWithPlaces,
             validateBooleanArgument,
             validateNestedBlueprint,
+            validateRegExp,
             addValidationMemoryProperty,
             rememberValidation,
             isAlreadyValidated,
@@ -190,6 +191,8 @@
         validateProperty = function (blueprintId, implementation, propertyName, propertyValue, errors) {
             if (is.string(propertyValue)) {
                 validatePropertyType(blueprintId, implementation, propertyName, propertyValue, errors);
+            } else if (is.regexp(propertyValue)) {
+                validateRegExp(blueprintId, implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
                 validatePropertyWithDetails(blueprintId, implementation, propertyName, propertyValue, propertyValue.type, errors);
             }
@@ -217,6 +220,9 @@
                         break;
                     case 'decimal':
                         validateDecimalWithPlaces(blueprintId, implementation, propertyName, propertyValue.places, errors);
+                        break;
+                    case 'expression':
+                        validateRegExp(blueprintId, implementation, propertyName, propertyValue.expression, errors);
                         break;
                     default:
                         validatePropertyType(blueprintId, implementation, propertyName, type, errors);
@@ -281,6 +287,12 @@
                 for (i = 0; i < validationResult.errors.length; i += 1) {
                     errors.push(validationResult.errors[i]);
                 }
+            }
+        };
+
+        validateRegExp = function (blueprintId, implementation, propertyName, regex, errors) {
+            if (regex.test(implementation[propertyName]) === false) {
+                errors.push(makeErrorMessage(locale.errors.requiresProperty, blueprintId, propertyName, regex.toString()));
             }
         };
 

@@ -454,7 +454,7 @@
         console.log("Unable to define module: UNKNOWN RUNTIME");
     }
     function Ctor(async, id, is, Exception, objectHelper) {
-        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, addValidationMemoryProperty, rememberValidation, isAlreadyValidated, dateIsBefore, dateIsAfter, makeErrorMessage, setReadOnlyProp, setDefaultCompatibility, setDefaultConfiguration, config = {}, versions = {
+        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, validateRegExp, addValidationMemoryProperty, rememberValidation, isAlreadyValidated, dateIsBefore, dateIsAfter, makeErrorMessage, setReadOnlyProp, setDefaultCompatibility, setDefaultConfiguration, config = {}, versions = {
             v20161119: new Date("2016-11-19"),
             v20161120: new Date("2016-11-20")
         }, locale = {
@@ -536,6 +536,8 @@
         validateProperty = function(blueprintId, implementation, propertyName, propertyValue, errors) {
             if (is.string(propertyValue)) {
                 validatePropertyType(blueprintId, implementation, propertyName, propertyValue, errors);
+            } else if (is.regexp(propertyValue)) {
+                validateRegExp(blueprintId, implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
                 validatePropertyWithDetails(blueprintId, implementation, propertyName, propertyValue, propertyValue.type, errors);
             }
@@ -560,6 +562,10 @@
 
                   case "decimal":
                     validateDecimalWithPlaces(blueprintId, implementation, propertyName, propertyValue.places, errors);
+                    break;
+
+                  case "expression":
+                    validateRegExp(blueprintId, implementation, propertyName, propertyValue.expression, errors);
                     break;
 
                   default:
@@ -604,6 +610,11 @@
                 for (i = 0; i < validationResult.errors.length; i += 1) {
                     errors.push(validationResult.errors[i]);
                 }
+            }
+        };
+        validateRegExp = function(blueprintId, implementation, propertyName, regex, errors) {
+            if (regex.test(implementation[propertyName]) === false) {
+                errors.push(makeErrorMessage(locale.errors.requiresProperty, blueprintId, propertyName, regex.toString()));
             }
         };
         addValidationMemoryProperty = function(implementation) {
