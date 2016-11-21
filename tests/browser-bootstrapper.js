@@ -3,17 +3,20 @@
     'use strict';
 
     var is = polyn.is,
-        isFixture = fixtures.is,
         id = polyn.id,
-        idFixture = fixtures.id,
         async = polyn.async,
-        asyncFixture = fixtures.async,
         Exception = polyn.Exception,
-        ExceptionFixture = fixtures.Exception,
         Blueprint = polyn.Blueprint,
-        BlueprintFixture = fixtures.Blueprint,
         Immutable = polyn.Immutable,
-        ImmutableFixture = fixtures.Immutable;
+        objectHelper = polyn.objectHelper,
+
+        isFixture = fixtures.is,
+        idFixture = fixtures.id,
+        asyncFixture = fixtures.async,
+        ExceptionFixture = fixtures.Exception,
+        BlueprintFixture = fixtures.Blueprint,
+        ImmutableFixture = fixtures.Immutable,
+        objectHelperFixture = fixtures.objectHelper;
 
     // globals: describe, it, xit, before, after
 
@@ -23,5 +26,6 @@
     ExceptionFixture.run(Exception, describe, it, chai.expect);
     BlueprintFixture.run(Blueprint, id, is, describe, it, chai.expect, beforeEach, afterEach);
     ImmutableFixture.run(Immutable, describe, it, chai.expect, beforeEach, afterEach);
+    objectHelperFixture.run(objectHelper, describe, it, chai.expect);
 
 }(window.polyn, window.fixtures));

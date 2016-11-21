@@ -105,7 +105,11 @@
                 }
 
                 if (deep && isObject(from[propName]) && !isDate(from[propName])) {
+                    // this is a deep clone, and we encountered an object - recurse
                     newVals[propName] = cloneObject(from[propName]);
+                } else if (!deep && isObject(from[propName]) && !isDate(from[propName])) {
+                    // this is NOT a deep clone, and we encountered an object that is NOT a date
+                    newVals[propName] = null;
                 } else {
                     newVals[propName] = copyValue(from[propName]);
                 }
@@ -113,6 +117,32 @@
 
             return newVals;
         } // /toObject
+
+        /*
+        // Makes a new Object from an existing Immutable, replacing
+        // values with the properties in the mergeVals argument
+        // NOTE: This does not return an Immutable!
+        // @param from: The Immutable to copy
+        // @param mergeVals: The new values to overwrite as we copy
+        */
+        function merge (from, mergeVals) {
+            var newVals = objectHelper.cloneObject(from, false),
+                propName;
+
+            for (propName in mergeVals) {
+                if (!mergeVals.hasOwnProperty(propName)) {
+                    continue;
+                }
+
+                if (isObject(mergeVals[propName]) && !isDate(mergeVals[propName])) {
+                    newVals[propName] = merge(from[propName], mergeVals[propName]);
+                } else {
+                    newVals[propName] = mergeVals[propName];
+                }
+            }
+
+            return newVals;
+        } // /merge
 
         function isDate (val) {
             return typeof val === 'object' &&
@@ -126,6 +156,7 @@
         setReadOnlyProperty(self, 'setReadOnlyProperty', setReadOnlyProperty);
         setReadOnlyProperty(self, 'copyValue', copyValue);
         setReadOnlyProperty(self, 'cloneObject', cloneObject);
+        setReadOnlyProperty(self, 'merge', merge);
 
         return self;
     }

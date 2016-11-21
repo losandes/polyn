@@ -15,6 +15,7 @@ module.exports = function (grunt) {
             'tests/specs/id.fixture.js',
             'tests/specs/Immutable.fixture.js',
             'tests/specs/is.fixture.js',
+            'tests/specs/objectHelper.fixture.js',
             // runner
             'tests/browser-bootstrapper.js'
         ];

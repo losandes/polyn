@@ -7,7 +7,7 @@ var chai = require('chai'),
     Exception = polyn.Exception,
     Blueprint = polyn.Blueprint,
     Immutable = polyn.Immutable,
-    // objectHelper = polyn.objectHelper,
+    objectHelper = polyn.objectHelper,
     // is = require('../src/is.js'),
     // id = require('../src/id.js'),
     // async = require('../src/async.js'),
@@ -19,13 +19,15 @@ var chai = require('chai'),
     asyncFixture = require('./specs/async.fixture.js'),
     ExceptionFixture = require('./specs/Exception.fixture.js'),
     BlueprintFixture = require('./specs/Blueprint.fixture.js'),
-    ImmutableFixture = require('./specs/Immutable.fixture.js');
+    ImmutableFixture = require('./specs/Immutable.fixture.js'),
+    objectHelperFixture = require('./specs/objectHelper.fixture.js');
 
 // globals: describe, it, xit, before, after
 
-isFixture.run(is, describe, it, chai.expect);
-idFixture.run(id, describe, it, chai.expect);
-asyncFixture.run(async, describe, it);
-ExceptionFixture.run(Exception, describe, it, chai.expect);
-BlueprintFixture.run(Blueprint, id, is, describe, it, chai.expect, beforeEach, afterEach);
-ImmutableFixture.run(Immutable, describe, it, chai.expect, beforeEach, afterEach);
+// isFixture.run(is, describe, it, chai.expect);
+// idFixture.run(id, describe, it, chai.expect);
+// asyncFixture.run(async, describe, it);
+// ExceptionFixture.run(Exception, describe, it, chai.expect);
+// BlueprintFixture.run(Blueprint, id, is, describe, it, chai.expect, beforeEach, afterEach);
+// ImmutableFixture.run(Immutable, describe, it, chai.expect, beforeEach, afterEach);
+objectHelperFixture.run(objectHelper, describe, it, chai.expect);

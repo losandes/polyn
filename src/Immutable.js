@@ -127,7 +127,7 @@
             // @param mergeVals: The new values to overwrite as we copy
             */
             Constructor.merge = function (from, mergeVals) {
-                return new Constructor(merge(from, mergeVals));
+                return new Constructor(objectHelper.merge(from, mergeVals));
             };
 
             /*
@@ -229,28 +229,6 @@
         function InvalidArgumentException (error, messages) {
             return new Exception(locale.errorTypes.invalidArgumentException, error, messages);
         } // /InvalidArgumentException
-
-        /*
-        // Makes a new Object from an existing Immutable, replacing
-        // values with the properties in the mergeVals argument
-        // NOTE: This does not return an Immutable!
-        // @param from: The Immutable to copy
-        // @param mergeVals: The new values to overwrite as we copy
-        */
-        function merge (from, mergeVals) {
-            var newVals = objectHelper.cloneObject(from, false),
-                propName;
-
-            for (propName in mergeVals) {
-                if (mergeVals.hasOwnProperty(propName) && typeof mergeVals[propName] === 'object') {
-                    newVals[propName] = merge(newVals[propName], mergeVals[propName]);
-                } else if (mergeVals.hasOwnProperty(propName)) {
-                    newVals[propName] = mergeVals[propName];
-                }
-            }
-
-            return newVals;
-        } // /merge
 
         /*
         // Confgure Immutable

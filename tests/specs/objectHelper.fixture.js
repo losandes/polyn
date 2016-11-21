@@ -1,0 +1,280 @@
+(function () {
+    'use strict';
+
+    /*
+    // Exports
+    */
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports.run = Spec;
+    } else if (window) {
+        window.fixtures = window.fixtures || {};
+        window.fixtures.objetHelper = {
+            run: Spec
+        };
+    } else {
+        console.log('Unable to define module: UNKNOWN RUNTIME');
+    }
+
+    function Spec (objectHelper, describe, it, expect) {
+        describe('objectHelper', function () {
+            describe('copyValue', function () {
+                it('should make a copy of the value', function () {
+                    // given
+                    var expected = 'test';
+
+                    // when
+                    var actual = objectHelper.copyValue(expected);
+
+                    // then
+                    expect(actual).to.equal(expected);
+                });
+
+                it('should NOT provide a reference to the existing property', function () {
+                    // given
+                    var original = {
+                        name: 'test'
+                    };
+
+                    // when
+                    var actual = objectHelper.copyValue(original);
+                    actual.name = 'baz';
+
+                    // then
+                    expect(actual.name).to.equal('baz');
+                    expect(original.name).to.equal('test');
+                });
+
+                it('should produce a Date, when the given value is a Date', function () {
+                    // given
+                    var expected = new Date();
+
+                    // when
+                    var actual = objectHelper.copyValue(expected);
+
+                    // then
+                    expect(typeof actual).to.equal('object');
+                    expect(Object.prototype.toString.call(actual)).to.equal('[object Date]');
+                });
+            }); // /copyValue
+
+            describe('cloneObject', function () {
+                it('should make a clone of the object', function () {
+                    // given
+                    var original = {
+                        name: 'test',
+                        description: 'foo'
+                    };
+
+                    // when
+                    var actual = objectHelper.cloneObject(original);
+
+                    // then
+                    expect(actual.name).to.equal(original.name);
+                    expect(actual.description).to.equal(original.description);
+                });
+
+                it('should NOT provide a reference to the existing property', function () {
+                    // given
+                    var original = {
+                        name: 'test',
+                        description: 'foo'
+                    };
+
+                    // when
+                    var actual = objectHelper.cloneObject(original);
+                    actual.name = 'baz';
+                    actual.description = 'baz';
+
+                    // then
+                    expect(actual.name).to.not.equal(original.name);
+                    expect(actual.description).to.not.equal(original.description);
+                });
+
+                it('should make a deep clone of the object, by default', function () {
+                    // given
+                    var expectedTime = new Date().getTime(),
+                        original = {
+                            name: 'test',
+                            date: new Date(expectedTime),
+                            nest: {
+                                name: 'test',
+                                date: new Date(expectedTime),
+                                nest: {
+                                    name: 'test',
+                                    date: new Date(expectedTime)
+                                }
+                            }
+                        };
+
+                    // when
+                    var actual = objectHelper.cloneObject(original);
+
+                    // then
+                    expect(actual.name).to.equal(original.name);
+                    expect(actual.date.getTime()).to.equal(expectedTime);
+                    expect(actual.nest.name).to.equal(original.nest.name);
+                    expect(actual.nest.date.getTime()).to.equal(expectedTime);
+                    expect(actual.nest.nest.name).to.equal(original.nest.nest.name);
+                    expect(actual.nest.nest.date.getTime()).to.equal(expectedTime);
+                });
+
+                it('should make a shallow clone of the object, if deep is false', function () {
+                    // given
+                    var expectedTime = new Date().getTime(),
+                        original = {
+                            name: 'test',
+                            date: new Date(expectedTime),
+                            nest: {
+                                name: 'test',
+                                date: new Date(expectedTime),
+                                nest: {
+                                    name: 'test',
+                                    date: new Date(expectedTime)
+                                }
+                            }
+                        };
+
+                    // when
+                    var actual = objectHelper.cloneObject(original, false);
+
+                    // then
+                    expect(actual.name).to.equal(original.name);
+                    expect(actual.date.getTime()).to.equal(expectedTime);
+                    expect(actual.nest).to.equal(null);
+                });
+            }); // /cloneObject
+
+            describe('merge', function () {
+                it('should merge two objects into one, favoring the properties on the right', function () {
+                    // given
+                    var expectedTime = new Date().getTime(),
+                        one = {
+                            name: 'test',
+                            overridden: 'never-seen',
+                            nest: {
+                                name: 'test',
+                                overridden: 'never-seen'
+                            }
+                        }, two = {
+                            description: 'foo',
+                            overridden: 'overwritten!',
+                            nest: {
+                                date: new Date(expectedTime),
+                                overridden: 'overwritten!'
+                            }
+                        };
+
+                    // when
+                    var actual = objectHelper.merge(one, two);
+
+                    // then
+                    expect(actual.name).to.equal(one.name);
+                    expect(actual.description).to.equal(two.description);
+                    expect(actual.overridden).to.equal(two.overridden);
+                    expect(actual.nest.name).to.equal(one.nest.name);
+                    expect(actual.nest.date.getTime()).to.equal(expectedTime);
+                    expect(actual.nest.overridden).to.equal(two.nest.overridden);
+                });
+
+                it('should produce a brand new object (should NOT provide a reference to the existing properties)', function () {
+                    // given
+                    var expectedTime = new Date().getTime(),
+                        one = {
+                            name: 'test',
+                            overridden: 'never-seen',
+                            nest: {
+                                name: 'test',
+                                overridden: 'never-seen'
+                            }
+                        }, two = {
+                            description: 'foo',
+                            overridden: 'overwritten!',
+                            nest: {
+                                date: new Date(expectedTime),
+                                overridden: 'overwritten!'
+                            }
+                        };
+
+                    // when
+                    var actual = objectHelper.merge(one, two);
+                    actual.name = 'baz';
+                    actual.description = 'baz';
+                    actual.overridden = 'baz';
+                    actual.nest.name = 'baz';
+                    actual.nest.date = 'baz';
+                    actual.nest.date = new Date('2042-01-01');
+                    actual.nest.overridden = 'baz';
+
+                    // then
+                    expect(actual.name).to.not.equal(one.name);
+                    expect(actual.description).to.not.equal(two.description);
+                    expect(actual.overridden).to.not.equal(two.overridden);
+                    expect(actual.nest.name).to.not.equal(one.nest.name);
+                    expect(actual.nest.date).to.not.equal(two.nest.date);
+                    expect(actual.nest.overridden).to.not.equal(two.nest.overridden);
+                });
+            }); // /merge
+
+            describe('setReadOnlyProperty', function () {
+                it('should add the property', function () {
+                    // given
+                    var expected = 'hello',
+                        actual = {};
+
+                    // when
+                    objectHelper.setReadOnlyProperty(actual, 'test', expected);
+
+                    // then
+                    expect(actual.test).to.equal(expected);
+                });
+
+                it('should add a read-only property', function (done) {
+                    // given
+                    var expected = 'hello',
+                        actual = {};
+
+                    objectHelper.setReadOnlyProperty(actual, 'test', expected, function () {
+                        // then
+                        expect(actual.test).to.equal(expected);
+                        done();
+                    });
+
+                    // when
+                    actual.test = 'bar';
+                });
+
+                it('should be enumerable', function () {
+                    // given
+                    var expected = 'hello',
+                        actual = {},
+                        props = ['test1', 'test2', 'test3'],
+                        prop,
+                        i,
+                        enumeratedProps = [];
+
+                    for (i = 0; i < props.length; i += 1) {
+                        objectHelper.setReadOnlyProperty(actual, props[i], expected);
+                    }
+
+                    // when
+                    for (prop in actual) {
+                        if (!actual.hasOwnProperty(prop)) {
+                            continue;
+                        }
+
+                        if (props.indexOf(prop) > -1) {
+                            enumeratedProps.push(prop);
+                        }
+                    }
+
+                    expect(enumeratedProps.length).to.equal(props.length);
+                });
+
+                it('should NOT be deletable', function () {
+
+                });
+            }); // /setReadOnlyProperty
+        }); // /describe async
+    } // /Spec
+
+}());
