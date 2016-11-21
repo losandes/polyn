@@ -81,8 +81,6 @@
             */
             function Constructor (values) {
                 var propName,
-                    // the private properties are set on this
-                    internal = {},
                     // we return self - it will provide access to the getters and setters
                     self = {};
 
@@ -107,11 +105,16 @@
                 try {
                     // Enumerate the schema, and create immutable properties
                     for (propName in schema) {
-                        if (schema.hasOwnProperty(propName) && typeof values[propName] !== 'undefined') {
-                            makeImmutableProperty(self, internal, schema, values, propName);
-                        } else if (schema.hasOwnProperty(propName)) {
-                            makeReadOnlyNullProperty(self, propName);
+                        if (!schema.hasOwnProperty(propName)) {
+                            continue;
                         }
+
+                        if (!values[propName]) {
+                            makeReadOnlyNullProperty(self, propName);
+                            continue;
+                        }
+
+                        makeImmutableProperty(self, schema, values, propName);
                     }
                 } catch (e) {
                     return new InvalidArgumentException(e);
@@ -180,27 +183,33 @@
         } // /Immutable
 
         /*
-        // Creates a copy of the value on `internal`, and creates a
-        // read-only property on `self`
+        // Creates a copy of the value, and creates a read-only property on `self`
         // @param self: The object that will be returned by the Constructor
-        // @param internal: The private object that contains all of the values
         // @param schema: The schema for this object
         // @param values: The values that are being written to this object
         // @param propName: The name of the property that is being written to this object
         */
-        function makeImmutableProperty (self, internal, schema, values, propName) {
+        function makeImmutableProperty (self, schema, values, propName) {
             // In order to guarantee that the values we return cannot be
             // modified, we need to make a copy of their values.
             if (typeof schema[propName] && schema[propName].__immutableCtor) {
                 // this is a nested immutable
-                internal[propName] = new schema[propName](values[propName]);
+                objectHelper.setReadOnlyProperty(
+                    self,
+                    propName,
+                    new schema[propName](values[propName]),
+                    makeSetHandler(propName)
+                );
             } else {
-                internal[propName] = objectHelper.copyValue(values[propName]);
+                objectHelper.setReadOnlyProperty(
+                    self,
+                    propName,
+                    // TODO: not sure the copyValue is necessary any longer
+                    // write tests that validate there is no reference
+                    objectHelper.copyValue(values[propName]),
+                    makeSetHandler(propName)
+                );
             }
-
-            // TODO: since we're passing the value into this function,
-            // can we get rid of internal?
-            objectHelper.setReadOnlyProperty(self, propName, internal[propName], makeSetHandler(propName));
         } // /makeImmutableProperty
 
         /*
