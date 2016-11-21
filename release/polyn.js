@@ -101,8 +101,24 @@
                 }
                 if (deep && isObject(from[propName]) && !isDate(from[propName])) {
                     newVals[propName] = cloneObject(from[propName]);
+                } else if (!deep && isObject(from[propName]) && !isDate(from[propName])) {
+                    newVals[propName] = null;
                 } else {
                     newVals[propName] = copyValue(from[propName]);
+                }
+            }
+            return newVals;
+        }
+        function merge(from, mergeVals) {
+            var newVals = objectHelper.cloneObject(from, false), propName;
+            for (propName in mergeVals) {
+                if (!mergeVals.hasOwnProperty(propName)) {
+                    continue;
+                }
+                if (isObject(mergeVals[propName]) && !isDate(mergeVals[propName])) {
+                    newVals[propName] = merge(from[propName], mergeVals[propName]);
+                } else {
+                    newVals[propName] = mergeVals[propName];
                 }
             }
             return newVals;
@@ -116,6 +132,7 @@
         setReadOnlyProperty(self, "setReadOnlyProperty", setReadOnlyProperty);
         setReadOnlyProperty(self, "copyValue", copyValue);
         setReadOnlyProperty(self, "cloneObject", cloneObject);
+        setReadOnlyProperty(self, "merge", merge);
         return self;
     }
 })();
@@ -841,7 +858,7 @@
                 return self;
             }
             Constructor.merge = function(from, mergeVals) {
-                return new Constructor(merge(from, mergeVals));
+                return new Constructor(objectHelper.merge(from, mergeVals));
             };
             Constructor.toObject = function(from) {
                 return objectHelper.cloneObject(from, {});
@@ -890,17 +907,6 @@
         }
         function InvalidArgumentException(error, messages) {
             return new Exception(locale.errorTypes.invalidArgumentException, error, messages);
-        }
-        function merge(from, mergeVals) {
-            var newVals = objectHelper.cloneObject(from, false), propName;
-            for (propName in mergeVals) {
-                if (mergeVals.hasOwnProperty(propName) && typeof mergeVals[propName] === "object") {
-                    newVals[propName] = merge(newVals[propName], mergeVals[propName]);
-                } else if (mergeVals.hasOwnProperty(propName)) {
-                    newVals[propName] = mergeVals[propName];
-                }
-            }
-            return newVals;
         }
         Immutable.configure = function(cfg) {
             cfg = cfg || {};

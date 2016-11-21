@@ -8,7 +8,7 @@
         module.exports.run = Spec;
     } else if (window) {
         window.fixtures = window.fixtures || {};
-        window.fixtures.objetHelper = {
+        window.fixtures.objectHelper = {
             run: Spec
         };
     } else {
@@ -111,11 +111,11 @@
 
                     // then
                     expect(actual.name).to.equal(original.name);
-                    expect(actual.date.getTime()).to.equal(expectedTime);
+                    expect((actual.date.getTime() - expectedTime) < 1000).to.equal(true);
                     expect(actual.nest.name).to.equal(original.nest.name);
-                    expect(actual.nest.date.getTime()).to.equal(expectedTime);
+                    expect((actual.nest.date.getTime() - expectedTime) < 1000).to.equal(true);
                     expect(actual.nest.nest.name).to.equal(original.nest.nest.name);
-                    expect(actual.nest.nest.date.getTime()).to.equal(expectedTime);
+                    expect((actual.nest.nest.date.getTime() - expectedTime) < 1000).to.equal(true);
                 });
 
                 it('should make a shallow clone of the object, if deep is false', function () {
@@ -139,7 +139,7 @@
 
                     // then
                     expect(actual.name).to.equal(original.name);
-                    expect(actual.date.getTime()).to.equal(expectedTime);
+                    expect((actual.date.getTime() - expectedTime) < 1000).to.equal(true);
                     expect(actual.nest).to.equal(null);
                 });
             }); // /cloneObject
