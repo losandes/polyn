@@ -1,7 +1,17 @@
 (function () {
     'use strict';
 
-    var Immutable;
+    var Immutable,
+        locale = {
+            errorTypes: {
+                invalidArgumentException: 'InvalidArgumentException',
+                readOnlyViolation: 'ReadOnlyViolation'
+            },
+            errors: {
+                initialValidationFailed: 'The argument passed to the constructor is not valid',
+                validatePropertyInvalidArgs: 'To validate a property, you must provide the instance, and property name'
+            }
+        };
 
     /*
     // Exports
@@ -9,36 +19,32 @@
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = Ctor(
             require('./Blueprint.js'),
-            require('./Exception.js')
+            require('./Exception.js'),
+            require('./objectHelper.js')
         );
     } else if (window) {
         if (
             !window.polyn ||
             !window.polyn.Blueprint ||
-            !window.polyn.Exception
+            !window.polyn.Exception ||
+            !window.polyn.objectHelper
         ) {
             return console.log('Unable to define module: LOADED OUT OF ORDER');
         }
 
         Immutable = Ctor(
             window.polyn.Blueprint,
-            window.polyn.Exception
+            window.polyn.Exception,
+            window.polyn.objectHelper
         );
 
-        Object.defineProperty(window.polyn, 'Immutable', {
-            get: function () {
-                return Immutable;
-            },
-            set: function () {
+        window.polyn.objectHelper.setReadOnlyProperty(window.polyn, 'Immutable', Immutable,
+            function () {
                 var err = new Error('[POLYN] polyn modules are read-only');
                 console.log(err);
                 return err;
-            },
-            // this property should show up when this object's property names are enumerated
-            enumerable: true,
-            // this property may not be deleted
-            configurable: false
-        });
+            }
+        );
     } else {
         console.log('Unable to define module: UNKNOWN RUNTIME');
     }
@@ -46,7 +52,7 @@
     /*
     // Immutable
     */
-    function Ctor(Blueprint, Exception) {
+    function Ctor(Blueprint, Exception, objectHelper) {
         var config = {
             onError: function (exception) {
                 console.log(exception);
@@ -89,7 +95,7 @@
                     !Blueprint.validate(blueprint, values).result
                 ) {
                     var err = new InvalidArgumentException(
-                        new Error('The argument passed to the constructor is not valid'),
+                        new Error(locale.errors.initialValidationFailed),
                         Blueprint.validate(blueprint, values).errors
                     );
 
@@ -129,7 +135,7 @@
             // @param from: The Immutable to copy
             */
             Constructor.toObject = function (from) {
-                return toObject(from, {});
+                return objectHelper.cloneObject(from, {});
             };
 
             /*
@@ -138,6 +144,23 @@
             */
             Constructor.validate = function (instance, callback) {
                 return Blueprint.validate(blueprint, instance, callback);
+            };
+
+            /*
+            // Validates an instance of an Immutable against it's schema
+            // @param instance: The instance that is being validated
+            */
+            Constructor.validateProperty = function (instance, propertyName, callback) {
+                if (!instance && typeof callback === 'function') {
+                    callback([locale.errors.validatePropertyInvalidArgs], false);
+                } else if (!instance) {
+                    return {
+                        errors: [locale.errors.validatePropertyInvalidArgs],
+                        result: false
+                    };
+                }
+
+                return Blueprint.validateProperty(blueprint, propertyName, instance[propertyName], callback);
             };
 
             /*
@@ -172,63 +195,30 @@
                 // this is a nested immutable
                 internal[propName] = new schema[propName](values[propName]);
             } else {
-                internal[propName] = copyValue(values[propName]);
+                internal[propName] = objectHelper.copyValue(values[propName]);
             }
 
-            // Add a property with a getter, and a setter that throws.
-            Object.defineProperty(self, propName, {
-                get: function () {
-                    return internal[propName];
-                },
-                set: function () {
-                    var err = new Exception('ReadOnlyViolation', new Error('Cannot set `' + propName + '`. This object is immutable'));
-                    config.onError(err);
-                    return err;
-                },
-                // this property should show up when this object's propNameerties are enumerated
-                enumerable: true,
-                // this property may not be deleted
-                configurable: false
-            });
+            // TODO: since we're passing the value into this function,
+            // can we get rid of internal?
+            objectHelper.setReadOnlyProperty(self, propName, internal[propName], makeSetHandler(propName));
         } // /makeImmutableProperty
 
+        /*
+        // make a read-only property that returns null
+        */
         function makeReadOnlyNullProperty (self, propName) {
-            // Add a property with a getter, and a setter that throws.
-            Object.defineProperty(self, propName, {
-                get: function () {
-                    return null;
-                },
-                set: function () {
-                    var err = new Exception('ReadOnlyViolation', new Error('Cannot set `' + propName + '`. This object is immutable'));
-                    config.onError(err);
-                    return err;
-                },
-                // this property should show up when this object's propNameerties are enumerated
-                enumerable: true,
-                // this property may not be deleted
-                configurable: false
-            });
+            objectHelper.setReadOnlyProperty(self, propName, null, makeSetHandler(propName));
         } // /makeReadOnlyNullProperty
 
         /*
-        // Make a copy of a value, ensuring it's not a reference
-        // @param val: The value to get a copy of
+        // make a set handler that returns an exception
         */
-        function copyValue (val) {
-            if (!val) {
-                return val;
-            }
-
-            if (typeof val === 'object' && Object.prototype.toString.call(val) === '[object Date]') {
-                // the best way to clone a date, is to create a new Date from it
-                return new Date(val);
-            } else if (typeof val === 'object') {
-                // TODO: should we enumerate and recurse to ensure type consistency for nested dates?
-                // NOTE: we don't need it for the toObject usage, just for init
-                return JSON.parse(JSON.stringify(val));
-            } else {
-                return JSON.parse(JSON.stringify(val));
-            }
+        function makeSetHandler (propName) {
+            return function () {
+                var err = new Exception(locale.errorTypes.readOnlyViolation, new Error('Cannot set `' + propName + '`. This object is immutable'));
+                config.onError(err);
+                return err;
+            };
         }
 
         /*
@@ -237,7 +227,7 @@
         // @param messages: An array of messages
         */
         function InvalidArgumentException (error, messages) {
-            return new Exception('InvalidArgumentException', error, messages);
+            return new Exception(locale.errorTypes.invalidArgumentException, error, messages);
         } // /InvalidArgumentException
 
         /*
@@ -248,7 +238,7 @@
         // @param mergeVals: The new values to overwrite as we copy
         */
         function merge (from, mergeVals) {
-            var newVals = toObject(from, false),
+            var newVals = objectHelper.cloneObject(from, false),
                 propName;
 
             for (propName in mergeVals) {
@@ -261,30 +251,6 @@
 
             return newVals;
         } // /merge
-
-        /*
-        // Copies the values of an Immutable to a plain JS Object
-        // @param from: The Immutable to copy
-        // @param deep (default: true): Whether or not to recurse when objects are found
-        */
-        function toObject (from, deep) {
-            var newVals = {},
-                propName;
-
-            if (typeof deep === 'undefined') {
-                deep = true;
-            }
-
-            for (propName in from) {
-                if (from.hasOwnProperty(propName) && typeof from[propName] === 'object' && deep) {
-                    newVals[propName] = toObject(from[propName]);
-                } else if (from.hasOwnProperty(propName)) {
-                    newVals[propName] = copyValue(from[propName]);
-                }
-            }
-
-            return newVals;
-        } // /toObject
 
         /*
         // Confgure Immutable

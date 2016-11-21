@@ -11,7 +11,8 @@
             require('./async.js'),
             require('./id.js'),
             require('./is.js'),
-            require('./Exception.js')
+            require('./Exception.js'),
+            require('./objectHelper.js')
         );
     } else if (window) {
         if (
@@ -19,7 +20,8 @@
             !window.polyn.async ||
             !window.polyn.id ||
             !window.polyn.is ||
-            !window.polyn.Exception
+            !window.polyn.Exception ||
+            !window.polyn.objectHelper
         ) {
             return console.log('Unable to define module: LOADED OUT OF ORDER');
         }
@@ -28,23 +30,17 @@
             window.polyn.async,
             window.polyn.id,
             window.polyn.is,
-            window.polyn.Exception
+            window.polyn.Exception,
+            window.polyn.objectHelper
         );
 
-        Object.defineProperty(window.polyn, 'Blueprint', {
-            get: function () {
-                return bp;
-            },
-            set: function () {
+        window.polyn.objectHelper.setReadOnlyProperty(window.polyn, 'Blueprint', bp,
+            function () {
                 var err = new Error('[POLYN] polyn modules are read-only');
                 console.log(err);
                 return err;
-            },
-            // this property should show up when this object's property names are enumerated
-            enumerable: true,
-            // this property may not be deleted
-            configurable: false
-        });
+            }
+        );
     } else {
         console.log('Unable to define module: UNKNOWN RUNTIME');
     }
@@ -52,7 +48,7 @@
     /*
     // Blueprint
     */
-    function Ctor(async, id, is, Exception) {
+    function Ctor(async, id, is, Exception, objectHelper) {
         var Blueprint,
             signatureMatches,
             syncSignatureMatches,
@@ -80,6 +76,10 @@
                 v20161120: new Date('2016-11-20')
             },
             locale = {
+                errorTypes: {
+                    invalidArgumentException: 'InvalidArgumentException',
+                    readOnlyViolation: 'ReadOnlyViolation'
+                },
                 errors: {
                     requiresImplementation: 'An implementation is required to create a new instance of an interface',
                     requiresProperty: 'This implementation does not satisfy blueprint, {{blueprint}}. It should have the property, {{property}}, with type, {{type}}.',
@@ -89,7 +89,8 @@
                     missingSignaturesMatchImplementationArgument: 'The `implementation` argument is required',
                     missingSignaturesMatchCallbackArgument: 'The `callback` argument is required',
                     configurationCompatibilityIsNotValid: 'The date you tried to set the Blueprint compatibility to is not valid',
-                    invalidArgsForValidateProperty: 'To validate a single property, you must provide the blueprint, and the property name',
+                    validatePropertyInvalidArgs: 'To validate a single property, you must provide the blueprint, and the property name',
+                    validatePropertyNoBlueprintValue: 'The {{property}} property does not exist on the blueprint',
                     validatePropertyFailed: 'An error occurred while validating the property'
                 }
             };
@@ -329,19 +330,10 @@
         };
 
         setReadOnlyProp = function (obj, name, val) {
-            Object.defineProperty(obj, name, {
-                get: function () {
-                    return val;
-                },
-                set: function () {
-                    var err = new Exception('ReadOnlyViolation', new Error(name + ' is read-only'));
-                    config.onError(err);
-                    return err;
-                },
-                // this property should show up when this object's property names are enumerated
-                enumerable: true,
-                // this property may not be deleted
-                configurable: false
+            objectHelper.setReadOnlyProperty(obj, name, val, function () {
+                var err = new Exception(locale.errorTypes.readOnlyViolation, new Error(name + ' is read-only'));
+                config.onError(err);
+                return err;
             });
         };
 
@@ -441,17 +433,26 @@
         };
 
         Blueprint.syncValidateProperty = function (blueprint, propertyName, propertyValue) {
-            var implementation = {}, errors = [];
+            var implementation = {}, errors = [], blueprintProp;
 
             if (is.not.defined(blueprint) || is.not.string(propertyName)) {
                 return {
-                    errors: [locale.errors.invalidArgsForValidateProperty],
+                    errors: [locale.errors.validatePropertyInvalidArgs],
+                    result: false
+                };
+            }
+
+            blueprintProp = (blueprint.props && blueprint.props[propertyName]) || blueprint[propertyName];
+
+            if (is.not.defined(blueprintProp)) {
+                return {
+                    errors: [locale.errors.validatePropertyNoBlueprintValue.replace(/{{property}}/, propertyName)],
                     result: false
                 };
             }
 
             implementation[propertyName] = propertyValue;
-            validateProperty(blueprint.__blueprintId, implementation, propertyName, propertyValue, errors);
+            validateProperty(blueprint.__blueprintId, implementation, propertyName, blueprintProp, errors);
 
             return {
                 errors: errors.length === 0 ? null : errors,
@@ -545,7 +546,7 @@
             }
 
             // return a copy of the config
-            return JSON.parse(JSON.stringify(config));
+            return objectHelper.copyValue(config);
         };
 
         // SET CONFIGURATION DEFAULTS

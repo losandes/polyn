@@ -5,6 +5,7 @@ module.exports = function (grunt) {
     var banner = '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
         files = [
             './src/async.js',
+            './src/objectHelper.js',
             './src/id.js',
             './src/is.js',
             './src/Exception.js',

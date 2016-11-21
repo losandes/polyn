@@ -4,5 +4,6 @@ module.exports = {
     id: require('./src/id.js'),
     is: require('./src/is.js'),
     Blueprint: require('./src/Blueprint.js'),
-    Immutable: require('./src/Immutable.js')
+    Immutable: require('./src/Immutable.js'),
+    objectHelper: require('./src/objectHelper.js')
 };

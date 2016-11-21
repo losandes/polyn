@@ -961,7 +961,7 @@
 
             describe('validateProperty', function () {
                 describe('when a VALID property is validated', function () {
-                    it('should callback a true result', function () {
+                    it('should callback a true result', function (done) {
                         // given
                         var bp = new Blueprint({
                                 name: 'string'
@@ -972,10 +972,11 @@
                             // then
                             expect(errors).to.equal(null);
                             expect(result).to.equal(true);
+                            done();
                         });
                     });
 
-                    it('(INLINE) should callback a true result', function () {
+                    it('(INLINE) should callback a true result', function (done) {
                         // given
                         var bp = new Blueprint({
                                 name: 'string'
@@ -986,6 +987,7 @@
                             // then
                             expect(errors).to.equal(null);
                             expect(result).to.equal(true);
+                            done();
                         });
                     });
 
@@ -999,6 +1001,7 @@
                         var actual = Blueprint.validateProperty(bp, 'name', 'Trillian');
 
                         // then
+                        expect(Array.isArray(actual.errors)).to.equal(false);
                         expect(actual.result).to.equal(true);
                     });
 
@@ -1012,6 +1015,7 @@
                         var actual = bp.validateProperty('name', 'Trillian');
 
                         // then
+                        expect(Array.isArray(actual.errors)).to.equal(false);
                         expect(actual.result).to.equal(true);
                     });
 
@@ -1023,7 +1027,80 @@
                         var actual = Blueprint.validateProperty(bp, 'name', 'Trillian');
 
                         // then
+                        expect(Array.isArray(actual.errors)).to.equal(false);
                         expect(actual.result).to.equal(true);
+                    });
+                });
+
+                describe('when an INVALID property is validated', function () {
+                    it('should callback a false result', function (done) {
+                        // given
+                        var bp = new Blueprint({
+                                name: 'string'
+                            });
+
+                        // when
+                        Blueprint.validateProperty(bp, 'name', 123, function (errors, result) {
+                            // then
+                            expect(Array.isArray(errors)).to.equal(true);
+                            expect(result).to.equal(false);
+                            done();
+                        });
+                    });
+
+                    it('(INLINE) should callback a false result', function (done) {
+                        // given
+                        var bp = new Blueprint({
+                                name: 'string'
+                            });
+
+                        // when
+                        bp.validateProperty('name', 123, function (errors, result) {
+                            // then
+                            expect(Array.isArray(errors)).to.equal(true);
+                            expect(result).to.equal(false);
+                            done();
+                        });
+                    });
+
+                    it('should return a false result', function () {
+                        // given
+                        var bp = new Blueprint({
+                                name: 'string'
+                            });
+
+                        // when
+                        var actual = Blueprint.validateProperty(bp, 'name', 123);
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(true);
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('(INLINE) should return a false result', function () {
+                        // given
+                        var bp = new Blueprint({
+                                name: 'string'
+                            });
+
+                        // when
+                        var actual = bp.validateProperty('name', 123);
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(true);
+                        expect(actual.result).to.equal(false);
+                    });
+
+                    it('should work without a real Blueprint', function () {
+                        // given
+                        var bp = { name: 'string' };
+
+                        // when
+                        var actual = Blueprint.validateProperty(bp, 'name', 123);
+
+                        // then
+                        expect(Array.isArray(actual.errors)).to.equal(true);
+                        expect(actual.result).to.equal(false);
                     });
                 });
             });

@@ -408,7 +408,7 @@
                         name: 'string',
                         __skipValdation: true
                     }),
-                    sut = new Sut({ name: 'Andy' }),
+                    sut = new Sut({ name: 'Trillian' }),
                     actual;
 
                     // when
@@ -442,11 +442,65 @@
                         name: 'string',
                         __skipValdation: true
                     }),
-                    sut = new Sut({ name: 'Andy' }),
+                    sut = new Sut({ name: 'Trillian' }),
                     actual;
 
                     // when
                     actual = Sut.validate(sut, function (errors, result) {
+                        // then
+                        expect(Array.isArray(errors)).to.equal(false);
+                        expect(result).to.equal(true);
+                        done();
+                    });
+                });
+            });
+
+            describe('when lazy property validation is used', function () {
+                it('should NOT return an error when the property is VALID', function () {
+                    // given
+                    var Sut = new Immutable({
+                        name: 'string',
+                        __skipValdation: true
+                    }),
+                    sut = new Sut({ name: 'Trillian' }),
+                    actual;
+
+                    // when
+                    actual = Sut.validateProperty(sut, 'name');
+
+                    // then
+                    expect(Array.isArray(actual.errors)).to.equal(false);
+                    expect(actual.result).to.equal(true);
+                });
+
+                it('should return an error when the property is INVALID', function () {
+                    // given
+                    var Sut = new Immutable({
+                        name: 'string',
+                        __skipValdation: true
+                    }),
+                    sut = new Sut({}),
+                    actual;
+
+                    // when
+                    actual = Sut.validateProperty(sut, 'name');
+
+                    // then
+                    expect(Array.isArray(actual.errors)).to.equal(true);
+                    expect(actual.result).to.equal(false);
+                });
+
+                it('should support async validation', function (done) {
+                    // given
+                    var Sut = new Immutable({
+                        name: 'string',
+                        __skipValdation: true
+                    }),
+                    sut = new Sut({ name: 'Trillian' }),
+                    actual;
+
+                    // when
+                    actual = Sut.validateProperty(sut, 'name', function (errors, result) {
                         // then
                         expect(Array.isArray(errors)).to.equal(false);
                         expect(result).to.equal(true);

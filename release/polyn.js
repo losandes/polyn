@@ -38,6 +38,90 @@
 
 (function() {
     "use strict";
+    var objectHelper = ObjectHelper();
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = objectHelper;
+    } else if (window) {
+        window.polyn = window.polyn || {};
+        Object.defineProperty(window.polyn, "objectHelper", {
+            get: function() {
+                return objectHelper;
+            },
+            set: function() {
+                var err = new Error("[POLYN] polyn modules are read-only");
+                console.log(err);
+                return err;
+            },
+            enumerable: true,
+            configurable: false
+        });
+    } else {
+        console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
+    }
+    function ObjectHelper() {
+        var self = {};
+        function setReadOnlyProperty(obj, name, val, onError) {
+            var defaultErrorMessage = "the {{name}} property is read-only".replace(/{{name}}/, name);
+            Object.defineProperty(obj, name, {
+                get: function() {
+                    return val;
+                },
+                set: function() {
+                    if (typeof onError === "function") {
+                        return onError(defaultErrorMessage);
+                    }
+                    var err = new Error(defaultErrorMessage);
+                    console.log(err);
+                    return err;
+                },
+                enumerable: true,
+                configurable: false
+            });
+        }
+        function copyValue(val) {
+            if (!val) {
+                return val;
+            }
+            if (isDate(val)) {
+                return new Date(val);
+            } else if (isObject(val)) {
+                return JSON.parse(JSON.stringify(val));
+            } else {
+                return JSON.parse(JSON.stringify(val));
+            }
+        }
+        function cloneObject(from, deep) {
+            var newVals = {}, propName;
+            if (typeof deep === "undefined") {
+                deep = true;
+            }
+            for (propName in from) {
+                if (!from.hasOwnProperty(propName)) {
+                    continue;
+                }
+                if (deep && isObject(from[propName]) && !isDate(from[propName])) {
+                    newVals[propName] = cloneObject(from[propName]);
+                } else {
+                    newVals[propName] = copyValue(from[propName]);
+                }
+            }
+            return newVals;
+        }
+        function isDate(val) {
+            return typeof val === "object" && Object.prototype.toString.call(val) === "[object Date]";
+        }
+        function isObject(val) {
+            return typeof val === "object";
+        }
+        setReadOnlyProperty(self, "setReadOnlyProperty", setReadOnlyProperty);
+        setReadOnlyProperty(self, "copyValue", copyValue);
+        setReadOnlyProperty(self, "cloneObject", cloneObject);
+        return self;
+    }
+})();
+
+(function() {
+    "use strict";
     var id = Id();
     if (typeof module !== "undefined" && module.exports) {
         module.exports = id;
@@ -338,32 +422,29 @@
     "use strict";
     var bp;
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = Ctor(require("./async.js"), require("./id.js"), require("./is.js"), require("./Exception.js"));
+        module.exports = Ctor(require("./async.js"), require("./id.js"), require("./is.js"), require("./Exception.js"), require("./objectHelper.js"));
     } else if (window) {
-        if (!window.polyn || !window.polyn.async || !window.polyn.id || !window.polyn.is || !window.polyn.Exception) {
+        if (!window.polyn || !window.polyn.async || !window.polyn.id || !window.polyn.is || !window.polyn.Exception || !window.polyn.objectHelper) {
             return console.log("Unable to define module: LOADED OUT OF ORDER");
         }
-        bp = Ctor(window.polyn.async, window.polyn.id, window.polyn.is, window.polyn.Exception);
-        Object.defineProperty(window.polyn, "Blueprint", {
-            get: function() {
-                return bp;
-            },
-            set: function() {
-                var err = new Error("[POLYN] polyn modules are read-only");
-                console.log(err);
-                return err;
-            },
-            enumerable: true,
-            configurable: false
+        bp = Ctor(window.polyn.async, window.polyn.id, window.polyn.is, window.polyn.Exception, window.polyn.objectHelper);
+        window.polyn.objectHelper.setReadOnlyProperty(window.polyn, "Blueprint", bp, function() {
+            var err = new Error("[POLYN] polyn modules are read-only");
+            console.log(err);
+            return err;
         });
     } else {
         console.log("Unable to define module: UNKNOWN RUNTIME");
     }
-    function Ctor(async, id, is, Exception) {
+    function Ctor(async, id, is, Exception, objectHelper) {
         var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, addValidationMemoryProperty, rememberValidation, isAlreadyValidated, dateIsBefore, dateIsAfter, makeErrorMessage, setReadOnlyProp, setDefaultCompatibility, setDefaultConfiguration, config = {}, versions = {
             v20161119: new Date("2016-11-19"),
             v20161120: new Date("2016-11-20")
         }, locale = {
+            errorTypes: {
+                invalidArgumentException: "InvalidArgumentException",
+                readOnlyViolation: "ReadOnlyViolation"
+            },
             errors: {
                 requiresImplementation: "An implementation is required to create a new instance of an interface",
                 requiresProperty: "This implementation does not satisfy blueprint, {{blueprint}}. It should have the property, {{property}}, with type, {{type}}.",
@@ -372,7 +453,10 @@
                 missingSignaturesMatchBlueprintArgument: "The `blueprint` argument is required",
                 missingSignaturesMatchImplementationArgument: "The `implementation` argument is required",
                 missingSignaturesMatchCallbackArgument: "The `callback` argument is required",
-                configurationCompatibilityIsNotValid: "The date you tried to set the Blueprint compatibility to is not valid"
+                configurationCompatibilityIsNotValid: "The date you tried to set the Blueprint compatibility to is not valid",
+                validatePropertyInvalidArgs: "To validate a single property, you must provide the blueprint, and the property name",
+                validatePropertyNoBlueprintValue: "The {{property}} property does not exist on the blueprint",
+                validatePropertyFailed: "An error occurred while validating the property"
             }
         };
         signatureMatches = function(implementation, blueprint, callback) {
@@ -530,17 +614,10 @@
             return message.replace(/{{blueprint}}/gi, blueprintId).replace(/{{property}}/gi, propertyName).replace(/{{type}}/gi, propertyType);
         };
         setReadOnlyProp = function(obj, name, val) {
-            Object.defineProperty(obj, name, {
-                get: function() {
-                    return val;
-                },
-                set: function() {
-                    var err = new Exception("ReadOnlyViolation", new Error(name + " is read-only"));
-                    config.onError(err);
-                    return err;
-                },
-                enumerable: true,
-                configurable: false
+            objectHelper.setReadOnlyProperty(obj, name, val, function() {
+                var err = new Exception(locale.errorTypes.readOnlyViolation, new Error(name + " is read-only"));
+                config.onError(err);
+                return err;
             });
         };
         Blueprint = function(blueprint) {
@@ -562,6 +639,9 @@
             setReadOnlyProp(self, "validate", function(implementation, callback) {
                 return Blueprint.validate(self, implementation, callback);
             });
+            setReadOnlyProp(self, "validateProperty", function(propertyName, propertyValue, callback) {
+                return Blueprint.validateProperty(self, propertyName, propertyValue, callback);
+            });
             setReadOnlyProp(self, "signatureMatches", function(implementation, callback) {
                 return Blueprint.validate(self, implementation, callback);
             });
@@ -576,14 +656,6 @@
         Blueprint.validate = function(blueprint, implementation, callback) {
             if (is.not.function(callback)) {
                 return Blueprint.syncValidate(blueprint, implementation);
-            }
-            if (is.not.defined(blueprint)) {
-                callback([ locale.errors.missingSignaturesMatchBlueprintArgument ]);
-                return;
-            }
-            if (is.not.defined(implementation)) {
-                callback([ locale.errors.missingSignaturesMatchImplementationArgument ]);
-                return;
             }
             async.runAsync(function() {
                 signatureMatches(implementation, blueprint, callback);
@@ -603,6 +675,40 @@
                 };
             }
             return syncSignatureMatches(implementation, blueprint);
+        };
+        Blueprint.validateProperty = function(blueprint, propertyName, propertyValue, callback) {
+            if (is.not.function(callback)) {
+                return Blueprint.syncValidateProperty(blueprint, propertyName, propertyValue);
+            }
+            async.runAsync(function() {
+                var outcome = Blueprint.syncValidateProperty(blueprint, propertyName, propertyValue);
+                if (!outcome) {
+                    return callback([ locale.errors.validatePropertyFailed ], false);
+                }
+                callback(outcome.errors, outcome.result);
+            });
+        };
+        Blueprint.syncValidateProperty = function(blueprint, propertyName, propertyValue) {
+            var implementation = {}, errors = [], blueprintProp;
+            if (is.not.defined(blueprint) || is.not.string(propertyName)) {
+                return {
+                    errors: [ locale.errors.validatePropertyInvalidArgs ],
+                    result: false
+                };
+            }
+            blueprintProp = blueprint.props && blueprint.props[propertyName] || blueprint[propertyName];
+            if (is.not.defined(blueprintProp)) {
+                return {
+                    errors: [ locale.errors.validatePropertyNoBlueprintValue.replace(/{{property}}/, propertyName) ],
+                    result: false
+                };
+            }
+            implementation[propertyName] = propertyValue;
+            validateProperty(blueprint.__blueprintId, implementation, propertyName, blueprintProp, errors);
+            return {
+                errors: errors.length === 0 ? null : errors,
+                result: errors.length === 0 ? true : false
+            };
         };
         Blueprint.merge = function(blueprints, callback) {
             if (typeof callback !== "function") {
@@ -667,7 +773,7 @@
             if (is.function(cfg.onError)) {
                 config.onError = cfg.onError;
             }
-            return JSON.parse(JSON.stringify(config));
+            return objectHelper.copyValue(config);
         };
         Blueprint.configure();
         return Blueprint;
@@ -676,30 +782,32 @@
 
 (function() {
     "use strict";
-    var Immutable;
+    var Immutable, locale = {
+        errorTypes: {
+            invalidArgumentException: "InvalidArgumentException",
+            readOnlyViolation: "ReadOnlyViolation"
+        },
+        errors: {
+            initialValidationFailed: "The argument passed to the constructor is not valid",
+            validatePropertyInvalidArgs: "To validate a property, you must provide the instance, and property name"
+        }
+    };
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = Ctor(require("./Blueprint.js"), require("./Exception.js"));
+        module.exports = Ctor(require("./Blueprint.js"), require("./Exception.js"), require("./objectHelper.js"));
     } else if (window) {
-        if (!window.polyn || !window.polyn.Blueprint || !window.polyn.Exception) {
+        if (!window.polyn || !window.polyn.Blueprint || !window.polyn.Exception || !window.polyn.objectHelper) {
             return console.log("Unable to define module: LOADED OUT OF ORDER");
         }
-        Immutable = Ctor(window.polyn.Blueprint, window.polyn.Exception);
-        Object.defineProperty(window.polyn, "Immutable", {
-            get: function() {
-                return Immutable;
-            },
-            set: function() {
-                var err = new Error("[POLYN] polyn modules are read-only");
-                console.log(err);
-                return err;
-            },
-            enumerable: true,
-            configurable: false
+        Immutable = Ctor(window.polyn.Blueprint, window.polyn.Exception, window.polyn.objectHelper);
+        window.polyn.objectHelper.setReadOnlyProperty(window.polyn, "Immutable", Immutable, function() {
+            var err = new Error("[POLYN] polyn modules are read-only");
+            console.log(err);
+            return err;
         });
     } else {
         console.log("Unable to define module: UNKNOWN RUNTIME");
     }
-    function Ctor(Blueprint, Exception) {
+    function Ctor(Blueprint, Exception, objectHelper) {
         var config = {
             onError: function(exception) {
                 console.log(exception);
@@ -715,7 +823,7 @@
                 var propName, internal = {}, self = {};
                 values = values || {};
                 if (schema.__skipValdation !== true && !Blueprint.validate(blueprint, values).result) {
-                    var err = new InvalidArgumentException(new Error("The argument passed to the constructor is not valid"), Blueprint.validate(blueprint, values).errors);
+                    var err = new InvalidArgumentException(new Error(locale.errors.initialValidationFailed), Blueprint.validate(blueprint, values).errors);
                     config.onError(err);
                     return err;
                 }
@@ -736,10 +844,21 @@
                 return new Constructor(merge(from, mergeVals));
             };
             Constructor.toObject = function(from) {
-                return toObject(from, {});
+                return objectHelper.cloneObject(from, {});
             };
             Constructor.validate = function(instance, callback) {
                 return Blueprint.validate(blueprint, instance, callback);
+            };
+            Constructor.validateProperty = function(instance, propertyName, callback) {
+                if (!instance && typeof callback === "function") {
+                    callback([ locale.errors.validatePropertyInvalidArgs ], false);
+                } else if (!instance) {
+                    return {
+                        errors: [ locale.errors.validatePropertyInvalidArgs ],
+                        result: false
+                    };
+                }
+                return Blueprint.validateProperty(blueprint, propertyName, instance[propertyName], callback);
             };
             Constructor.log = function(instance) {
                 if (!instance) {
@@ -755,71 +874,30 @@
             if (typeof schema[propName] && schema[propName].__immutableCtor) {
                 internal[propName] = new schema[propName](values[propName]);
             } else {
-                internal[propName] = copyValue(values[propName]);
+                internal[propName] = objectHelper.copyValue(values[propName]);
             }
-            Object.defineProperty(self, propName, {
-                get: function() {
-                    return internal[propName];
-                },
-                set: function() {
-                    var err = new Exception("ReadOnlyViolation", new Error("Cannot set `" + propName + "`. This object is immutable"));
-                    config.onError(err);
-                    return err;
-                },
-                enumerable: true,
-                configurable: false
-            });
+            objectHelper.setReadOnlyProperty(self, propName, internal[propName], makeSetHandler(propName));
         }
         function makeReadOnlyNullProperty(self, propName) {
-            Object.defineProperty(self, propName, {
-                get: function() {
-                    return null;
-                },
-                set: function() {
-                    var err = new Exception("ReadOnlyViolation", new Error("Cannot set `" + propName + "`. This object is immutable"));
-                    config.onError(err);
-                    return err;
-                },
-                enumerable: true,
-                configurable: false
-            });
+            objectHelper.setReadOnlyProperty(self, propName, null, makeSetHandler(propName));
         }
-        function copyValue(val) {
-            if (!val) {
-                return val;
-            }
-            if (typeof val === "object" && Object.prototype.toString.call(val) === "[object Date]") {
-                return new Date(val);
-            } else if (typeof val === "object") {
-                return JSON.parse(JSON.stringify(val));
-            } else {
-                return JSON.parse(JSON.stringify(val));
-            }
+        function makeSetHandler(propName) {
+            return function() {
+                var err = new Exception(locale.errorTypes.readOnlyViolation, new Error("Cannot set `" + propName + "`. This object is immutable"));
+                config.onError(err);
+                return err;
+            };
         }
         function InvalidArgumentException(error, messages) {
-            return new Exception("InvalidArgumentException", error, messages);
+            return new Exception(locale.errorTypes.invalidArgumentException, error, messages);
         }
         function merge(from, mergeVals) {
-            var newVals = toObject(from, false), propName;
+            var newVals = objectHelper.cloneObject(from, false), propName;
             for (propName in mergeVals) {
                 if (mergeVals.hasOwnProperty(propName) && typeof mergeVals[propName] === "object") {
                     newVals[propName] = merge(newVals[propName], mergeVals[propName]);
                 } else if (mergeVals.hasOwnProperty(propName)) {
                     newVals[propName] = mergeVals[propName];
-                }
-            }
-            return newVals;
-        }
-        function toObject(from, deep) {
-            var newVals = {}, propName;
-            if (typeof deep === "undefined") {
-                deep = true;
-            }
-            for (propName in from) {
-                if (from.hasOwnProperty(propName) && typeof from[propName] === "object" && deep) {
-                    newVals[propName] = toObject(from[propName]);
-                } else if (from.hasOwnProperty(propName)) {
-                    newVals[propName] = copyValue(from[propName]);
                 }
             }
             return newVals;
