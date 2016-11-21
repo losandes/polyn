@@ -959,6 +959,75 @@
                 });
             });
 
+            describe('validateProperty', function () {
+                describe('when a VALID property is validated', function () {
+                    it('should callback a true result', function () {
+                        // given
+                        var bp = new Blueprint({
+                                name: 'string'
+                            });
+
+                        // when
+                        Blueprint.validateProperty(bp, 'name', 'Trillian', function (errors, result) {
+                            // then
+                            expect(errors).to.equal(null);
+                            expect(result).to.equal(true);
+                        });
+                    });
+
+                    it('(INLINE) should callback a true result', function () {
+                        // given
+                        var bp = new Blueprint({
+                                name: 'string'
+                            });
+
+                        // when
+                        bp.validateProperty('name', 'Trillian', function (errors, result) {
+                            // then
+                            expect(errors).to.equal(null);
+                            expect(result).to.equal(true);
+                        });
+                    });
+
+                    it('should return a true result', function () {
+                        // given
+                        var bp = new Blueprint({
+                                name: 'string'
+                            });
+
+                        // when
+                        var actual = Blueprint.validateProperty(bp, 'name', 'Trillian');
+
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('(INLINE) should return a true result', function () {
+                        // given
+                        var bp = new Blueprint({
+                                name: 'string'
+                            });
+
+                        // when
+                        var actual = bp.validateProperty('name', 'Trillian');
+
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+
+                    it('should work without a real Blueprint', function () {
+                        // given
+                        var bp = { name: 'string' };
+
+                        // when
+                        var actual = Blueprint.validateProperty(bp, 'name', 'Trillian');
+
+                        // then
+                        expect(actual.result).to.equal(true);
+                    });
+                });
+            });
+
         }); // /describe Blueprint
     } // /Spec
 

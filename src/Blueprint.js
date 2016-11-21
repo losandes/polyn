@@ -88,7 +88,9 @@
                     missingSignaturesMatchBlueprintArgument: 'The `blueprint` argument is required',
                     missingSignaturesMatchImplementationArgument: 'The `implementation` argument is required',
                     missingSignaturesMatchCallbackArgument: 'The `callback` argument is required',
-                    configurationCompatibilityIsNotValid: 'The date you tried to set the Blueprint compatibility to is not valid'
+                    configurationCompatibilityIsNotValid: 'The date you tried to set the Blueprint compatibility to is not valid',
+                    invalidArgsForValidateProperty: 'To validate a single property, you must provide the blueprint, and the property name',
+                    validatePropertyFailed: 'An error occurred while validating the property'
                 }
             };
 
@@ -373,6 +375,10 @@
                 return Blueprint.validate(self, implementation, callback);
             });
 
+            setReadOnlyProp(self, 'validateProperty', function (propertyName, propertyValue, callback) {
+                return Blueprint.validateProperty(self, propertyName, propertyValue, callback);
+            });
+
             setReadOnlyProp(self, 'signatureMatches', function (implementation, callback) {
                 return Blueprint.validate(self, implementation, callback);
             });
@@ -390,17 +396,8 @@
 
         Blueprint.validate = function (blueprint, implementation, callback) {
             if (is.not.function(callback)) {
+                // process this synchronously
                 return Blueprint.syncValidate(blueprint, implementation);
-            }
-
-            if (is.not.defined(blueprint)) {
-                callback([locale.errors.missingSignaturesMatchBlueprintArgument]);
-                return;
-            }
-
-            if (is.not.defined(implementation)) {
-                callback([locale.errors.missingSignaturesMatchImplementationArgument]);
-                return;
             }
 
             async.runAsync(function () {
@@ -424,6 +421,42 @@
             }
 
             return syncSignatureMatches(implementation, blueprint);
+        };
+
+        Blueprint.validateProperty = function (blueprint, propertyName, propertyValue, callback) {
+            if (is.not.function(callback)) {
+                // process this synchronously
+                return Blueprint.syncValidateProperty(blueprint, propertyName, propertyValue);
+            }
+
+            async.runAsync(function () {
+                var outcome = Blueprint.syncValidateProperty(blueprint, propertyName, propertyValue);
+
+                if (!outcome) {
+                    return callback([locale.errors.validatePropertyFailed], false);
+                }
+
+                callback(outcome.errors, outcome.result);
+            });
+        };
+
+        Blueprint.syncValidateProperty = function (blueprint, propertyName, propertyValue) {
+            var implementation = {}, errors = [];
+
+            if (is.not.defined(blueprint) || is.not.string(propertyName)) {
+                return {
+                    errors: [locale.errors.invalidArgsForValidateProperty],
+                    result: false
+                };
+            }
+
+            implementation[propertyName] = propertyValue;
+            validateProperty(blueprint.__blueprintId, implementation, propertyName, propertyValue, errors);
+
+            return {
+                errors: errors.length === 0 ? null : errors,
+                result: errors.length === 0 ? true : false
+            };
         };
 
         Blueprint.merge = function (blueprints, callback) {
