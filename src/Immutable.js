@@ -192,7 +192,7 @@
         function makeImmutableProperty (self, schema, values, propName) {
             // In order to guarantee that the values we return cannot be
             // modified, we need to make a copy of their values.
-            if (typeof schema[propName] && schema[propName].__immutableCtor) {
+            if (schema[propName].__immutableCtor) {
                 // this is a nested immutable
                 objectHelper.setReadOnlyProperty(
                     self,
