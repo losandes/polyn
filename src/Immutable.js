@@ -67,7 +67,7 @@
         // @param schema (Object): the Blueprint schema (JavaScript Object)
         */
         function Immutable (originalSchema) {
-            var schema = {}, blueprint, prop;
+            var schema = {}, blueprint, prop, propCtor;
 
             if (!originalSchema) {
                 return new InvalidArgumentException(new Error('A schema object, and values are required'));
@@ -87,6 +87,12 @@
                     schema[prop] = new Immutable(originalSchema[prop]);
                 } else {
                     schema[prop] = originalSchema[prop];
+                }
+
+                if (schema[prop].__immutableCtor) {
+                    // Add access to the Immutable on the Parent Immutable
+                    propCtor = prop.substring(0,1).toUpperCase() + prop.substring(1);
+                    Constructor[propCtor] = schema[prop];
                 }
             }
 

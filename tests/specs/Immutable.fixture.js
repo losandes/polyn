@@ -185,6 +185,27 @@
                     // then (ALSO SEE onError (above)
                     expect(sut.nested.str).to.equal('baz');
                 });
+
+                it('should provide access to the nested Immutables', function () {
+                    // when
+                    var Person = new Immutable({
+                        name: 'string',
+                        address: {
+                            street1: 'string'
+                        }
+                    });
+
+                    var Person2 = new Immutable({
+                        name: 'string',
+                        address: new Immutable({
+                            street1: 'string'
+                        })
+                    });
+
+                    // then
+                    expect(Person.Address.__immutableCtor).to.equal(true);
+                    expect(Person2.Address.__immutableCtor).to.equal(true);
+                });
             });
 
             describe('when merged with an object', function () {
