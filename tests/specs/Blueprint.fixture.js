@@ -1204,7 +1204,7 @@
                         var actual = bp.validate({
                             exp: 'frank'
                         });
-                        
+
                         // then
                         expect(Array.isArray(actual.errors)).to.equal(true);
                         expect(actual.result).to.equal(false);
@@ -1247,6 +1247,57 @@
                         expect(Array.isArray(actual.errors)).to.equal(false);
                         expect(actual.result).to.equal(true);
                     });
+                });
+            });
+
+            describe('when an unrecognized type is presented', function () {
+                it('should skip validation of those properties', function () {
+                    // given
+                    var bp = new Blueprint({
+                        name: 'blahalaldfj'
+                    });
+
+                    // when
+                    var actual = bp.validate({ name: 123 });
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                    expect(Array.isArray(actual.errors)).to.equal(false);
+                });
+
+                it('should skip validation of those properties', function () {
+                    // given
+                    var bp = new Blueprint({
+                        name: {
+                            type: 'blahalaldfj',
+                            required: true
+                        }
+                    });
+
+                    // when
+                    var actual = bp.validate({ name: 123 });
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                    expect(Array.isArray(actual.errors)).to.equal(false);
+                });
+            });
+
+            describe('when an object with unrecognized validation information is presented', function () {
+                it('should skip validation of those properties', function () {
+                    // given
+                    var bp = new Blueprint({
+                        name: {
+                            set: function () {}
+                        }
+                    });
+
+                    // when
+                    var actual = bp.validate({ name: 123 });
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                    expect(Array.isArray(actual.errors)).to.equal(false);
                 });
             });
 

@@ -20,14 +20,16 @@
         module.exports = Ctor(
             require('./Blueprint.js'),
             require('./Exception.js'),
-            require('./objectHelper.js')
+            require('./objectHelper.js'),
+            require('./is.js')
         );
     } else if (window) {
         if (
             !window.polyn ||
             !window.polyn.Blueprint ||
             !window.polyn.Exception ||
-            !window.polyn.objectHelper
+            !window.polyn.objectHelper ||
+            !window.polyn.is
         ) {
             return console.log('Unable to define module: LOADED OUT OF ORDER');
         }
@@ -35,7 +37,8 @@
         Immutable = Ctor(
             window.polyn.Blueprint,
             window.polyn.Exception,
-            window.polyn.objectHelper
+            window.polyn.objectHelper,
+            window.polyn.is
         );
 
         window.polyn.objectHelper.setReadOnlyProperty(window.polyn, 'Immutable', Immutable,
@@ -52,7 +55,7 @@
     /*
     // Immutable
     */
-    function Ctor(Blueprint, Exception, objectHelper) {
+    function Ctor(Blueprint, Exception, objectHelper, is) {
         var config = {
             onError: function (exception) {
                 console.log(exception);
@@ -63,15 +66,31 @@
         // Creates a Constructor for an Immutable object from a schema.
         // @param schema (Object): the Blueprint schema (JavaScript Object)
         */
-        function Immutable (schema) {
-            var blueprint;
+        function Immutable (originalSchema) {
+            var schema = {}, blueprint, prop;
 
-            if (!schema) {
+            if (!originalSchema) {
                 return new InvalidArgumentException(new Error('A schema object, and values are required'));
             }
 
-            // TODO: It doesn't really make sense to support the type, 'object'
-            // for an immutable blueprint - should we inspect that here?
+            // Convert any objects that aren't validatable by Blueprint into Immutables
+            for (prop in originalSchema) {
+                if (!originalSchema.hasOwnProperty(prop)) {
+                    continue;
+                }
+
+                if (
+                    is.object(originalSchema[prop]) &&
+                    !Blueprint.isValidatableProperty(originalSchema[prop]) &&
+                    !originalSchema[prop].__immutableCtor
+                ) {
+                    schema[prop] = new Immutable(originalSchema[prop]);
+                } else {
+                    schema[prop] = originalSchema[prop];
+                }
+            }
+
+            // This is the blueprint that the Immutable will be validated against
             blueprint = new Blueprint(schema);
 
             /*
@@ -154,7 +173,7 @@
             // @param instance: The instance that is being validated
             */
             Constructor.validateProperty = function (instance, propertyName, callback) {
-                if (!instance && typeof callback === 'function') {
+                if (!instance && is.function(callback)) {
                     callback([locale.errors.validatePropertyInvalidArgs], false);
                 } else if (!instance) {
                     return {
@@ -190,22 +209,20 @@
         // @param propName: The name of the property that is being written to this object
         */
         function makeImmutableProperty (self, schema, values, propName) {
-            // In order to guarantee that the values we return cannot be
-            // modified, we need to make a copy of their values.
-            if (schema[propName].__immutableCtor) {
+            if (schema[propName].__immutableCtor && is.function(schema[propName])) {
                 // this is a nested immutable
+                var Model = schema[propName];
+
                 objectHelper.setReadOnlyProperty(
                     self,
                     propName,
-                    new schema[propName](values[propName]),
+                    new Model(values[propName]),
                     makeSetHandler(propName)
                 );
             } else {
                 objectHelper.setReadOnlyProperty(
                     self,
                     propName,
-                    // TODO: not sure the copyValue is necessary any longer
-                    // write tests that validate there is no reference
                     objectHelper.copyValue(values[propName]),
                     makeSetHandler(propName)
                 );
@@ -245,7 +262,7 @@
         Immutable.configure = function (cfg) {
             cfg = cfg || {};
 
-            if (typeof cfg.onError === 'function') {
+            if (is.function(cfg.onError)) {
                 config.onError = cfg.onError;
             }
         };

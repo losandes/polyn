@@ -355,17 +355,24 @@
         Blueprint = function (blueprint) {
             var self = {},
                 props = {},
+                hasInvalidProperties = false,
                 prop;
 
             blueprint = blueprint || {};
 
             for (prop in blueprint) {
-                if (blueprint.hasOwnProperty(prop)) {
-                    if (prop === '__blueprintId') {
-                        setReadOnlyProp(self, '__blueprintId', blueprint.__blueprintId);
-                    } else {
-                        props[prop] = blueprint[prop];
-                    }
+                if (!blueprint.hasOwnProperty(prop)) {
+                    continue;
+                }
+
+                if (prop === '__blueprintId') {
+                    setReadOnlyProp(self, '__blueprintId', blueprint.__blueprintId);
+                } else if (Blueprint.isValidatableProperty(blueprint[prop])) {
+                    props[prop] = blueprint[prop];
+                } else {
+                    hasInvalidProperties = true;
+                    var err = new Exception(locale.errorTypes.invalidArgumentException, new Error(prop + ' is not validatable by Blueprint'));
+                    config.onError(err);
                 }
             }
 
@@ -394,6 +401,8 @@
             setReadOnlyProp(self, 'inherits', function (otherBlueprint) {
                 return Blueprint.syncMerge([self, otherBlueprint]);
             });
+
+            setReadOnlyProp(self, 'hasInvalidProperties', hasInvalidProperties);
 
             return self;
         };
@@ -541,6 +550,45 @@
             config.onError = function (message) {
                 console.log(message);
             };
+        };
+
+        Blueprint.types = [
+            'array',
+            'blueprint',
+            'bool',
+            'boolean',
+            'date',
+            'datetime',
+            'decimal',
+            'expression',
+            'function',
+            'money',
+            'nullOrWhitespace',
+            'number',
+            'object',
+            'regexp',
+            'string'
+        ];
+
+        Blueprint.isValidatableProperty = function (obj) {
+            if (!obj) {
+                return false;
+            } if (
+                // nested blueprint
+                obj.__blueprintId ||
+                // known type by string arg
+                (is.string(obj) && Blueprint.types.indexOf(obj) > -1) ||
+                // known type by obj.type arg
+                (is.string(obj.type) && Blueprint.types.indexOf(obj.type) > -1) ||
+                // regular expression
+                is.regexp(obj) ||
+                // validate function exists
+                is.function(obj.validate)
+            ) {
+                return true;
+            }
+
+            return false;
         };
 
         Blueprint.configure = function (cfg) {
