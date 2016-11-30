@@ -55,6 +55,20 @@
                     expect(typeof actual).to.equal('object');
                     expect(Object.prototype.toString.call(actual)).to.equal('[object Date]');
                 });
+
+                it('should produce a function, when the given value is a function', function () {
+                    // given
+                    var expectedOutput = 'test';
+                    var expected = function() { return 'test'; };
+
+                    // when
+                    var actual = objectHelper.copyValue(expected);
+
+                    // then
+                    expect(typeof actual).to.equal('function');
+                    expect(Object.prototype.toString.call(actual)).to.equal('[object Function]');
+                    expect(actual()).to.equal(expectedOutput);
+                });
             }); // /copyValue
 
             describe('cloneObject', function () {
@@ -153,14 +167,16 @@
                             overridden: 'never-seen',
                             nest: {
                                 name: 'test',
-                                overridden: 'never-seen'
+                                overridden: 'never-seen',
+                                func: function () { return 'test1'; }
                             }
                         }, two = {
                             description: 'foo',
                             overridden: 'overwritten!',
                             nest: {
                                 date: new Date(expectedTime),
-                                overridden: 'overwritten!'
+                                overridden: 'overwritten!',
+                                func: function () { return 'test2'; }
                             }
                         };
 
@@ -174,6 +190,26 @@
                     expect(actual.nest.name).to.equal(one.nest.name);
                     expect(actual.nest.date.getTime()).to.equal(expectedTime);
                     expect(actual.nest.overridden).to.equal(two.nest.overridden);
+                    expect(actual.nest.func()).to.equal('test2');
+                });
+
+                it('should merge two objects into one, favoring the properties on the right', function () {
+                    // given
+                    var one = {
+                            name: 'test',
+                            nest: {
+                                func: function () { return 'test1'; }
+                            }
+                        }, two = {
+                            name: 'test2'
+                        };
+
+                    // when
+                    var actual = objectHelper.merge(one, two);
+
+                    // then
+                    expect(actual.name).to.equal(two.name);
+                    expect(actual.nest.func()).to.equal('test1');
                 });
 
                 it('should produce a brand new object (should NOT provide a reference to the existing properties)', function () {

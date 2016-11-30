@@ -35,8 +35,7 @@
                         str: 'bar',
                         num: 9,
                         validated: 42,
-                        requiredProp: 'hello',
-                        withSetter: 'bar'
+                        requiredProp: 'hello'
                     };
 
                     // when
@@ -48,7 +47,6 @@
                     expect(actual.num).to.equal(expected.num);
                     expect(actual.validated).to.equal(expected.validated);
                     expect(actual.requiredProp).to.equal(expected.requiredProp);
-                    expect(actual.withSetter).to.equal(expected.withSetter);
                 });
             });
 
@@ -116,13 +114,21 @@
                             num: 9,
                             validated: 42,
                             requiredProp: 'hello',
-                            withSetter: 'bar',
+                            withSetter: {
+                                set: function (val, obj) {
+                                    console.log(obj, val);
+                                }
+                            },
                             nested: {
                                 str: 'bar',
                                 num: 9,
                                 validated: 42,
                                 requiredProp: 'hello',
-                                withSetter: 'bar'
+                                withSetter: {
+                                    set: function (val, obj) {
+                                        console.log(obj, val);
+                                    }
+                                }
                             }
                         },
                         actual;
@@ -136,13 +142,13 @@
                     expect(actual.num).to.equal(expected.num);
                     expect(actual.validated).to.equal(expected.validated);
                     expect(actual.requiredProp).to.equal(expected.requiredProp);
-                    expect(actual.withSetter).to.equal(expected.withSetter);
+                    expect(typeof actual.withSetter.set).to.equal('function');
 
                     expect(actual.nested.str).to.equal(expected.nested.str);
                     expect(actual.nested.num).to.equal(expected.nested.num);
                     expect(actual.nested.validated).to.equal(expected.nested.validated);
                     expect(actual.nested.requiredProp).to.equal(expected.nested.requiredProp);
-                    expect(actual.nested.withSetter).to.equal(expected.nested.withSetter);
+                    expect(typeof actual.nested.withSetter.set).to.equal('function');
                 });
 
                 it('should not allow mutation of the nested Immutables', function (done) {
@@ -244,25 +250,41 @@
                                 num: 9,
                                 validated: 42,
                                 requiredProp: 'hello',
-                                withSetter: 'bar',
+                                withSetter: {
+                                    set: function (val, obj) {
+                                        console.log(obj, val);
+                                    }
+                                },
                                 nested: new Sut({
                                     str: 'bar',
                                     num: 9,
                                     validated: 42,
                                     requiredProp: 'hello',
-                                    withSetter: 'bar',
+                                    withSetter: {
+                                        set: function (val, obj) {
+                                            console.log(obj, val);
+                                        }
+                                    },
                                     nested: new Sut({
                                         str: 'bar',
                                         num: 9,
                                         validated: 42,
                                         requiredProp: 'hello',
-                                        withSetter: 'bar',
+                                        withSetter: {
+                                            set: function (val, obj) {
+                                                console.log(obj, val);
+                                            }
+                                        },
                                         nested: {
                                             str: 'bar',
                                             num: 9,
                                             validated: 42,
                                             requiredProp: 'hello',
-                                            withSetter: 'bar'
+                                            withSetter: {
+                                                set: function (val, obj) {
+                                                    console.log(obj, val);
+                                                }
+                                            }
                                         }
                                     })
                                 })
@@ -296,7 +318,7 @@
                             expect(actual.num).to.equal(expected.num);
                             expect(actual.validated).to.equal(sutNest.validated);
                             expect(actual.requiredProp).to.equal(sutNest.requiredProp);
-                            expect(actual.withSetter).to.equal(sutNest.withSetter);
+                            expect(typeof actual.withSetter.set).to.equal('function');
                         };
 
                         validateNest(actual, expected, sut);
@@ -316,25 +338,41 @@
                             num: 9,
                             validated: 42,
                             requiredProp: 'hello',
-                            withSetter: 'bar',
+                            withSetter: {
+                                set: function (val, obj) {
+                                    console.log(obj, val);
+                                }
+                            },
                             nested: new Sut({
                                 str: 'bar',
                                 num: 9,
                                 validated: 42,
                                 requiredProp: 'hello',
-                                withSetter: 'bar',
+                                withSetter: {
+                                    set: function (val, obj) {
+                                        console.log(obj, val);
+                                    }
+                                },
                                 nested: new Sut({
                                     str: 'bar',
                                     num: 9,
                                     validated: 42,
                                     requiredProp: 'hello',
-                                    withSetter: 'bar',
+                                    withSetter: {
+                                        set: function (val, obj) {
+                                            console.log(obj, val);
+                                        }
+                                    },
                                     nested: {
                                         str: 'bar',
                                         num: 9,
                                         validated: 42,
                                         requiredProp: 'hello',
-                                        withSetter: 'bar'
+                                        withSetter: {
+                                            set: function (val, obj) {
+                                                console.log(obj, val);
+                                            }
+                                        }
                                     }
                                 })
                             })
@@ -352,7 +390,7 @@
                         expect(actual.num).to.equal(sutNest.num);
                         expect(actual.validated).to.equal(sutNest.validated);
                         expect(actual.requiredProp).to.equal(sutNest.requiredProp);
-                        expect(actual.withSetter).to.equal(sutNest.withSetter);
+                        expect(typeof actual.withSetter.set).to.equal('function');
                     };
 
                     validateNest(actual, sut);
@@ -508,6 +546,24 @@
                     });
                 });
             });
+
+            describe('when constructing an Immutable', function () {
+                it('should not produce a reference', function () {
+                    // given
+                    var Sut = new Immutable({
+                            obj: 'object',
+                            __skipValdation: true
+                        }),
+                        reference = { obj: { name: 'Trillian' } },
+                        sut = new Sut(reference);
+
+                    // when
+                    reference.obj.name = 'Zaphod';
+
+                    // then
+                    expect(sut.obj.name).to.equal('Trillian');
+                });
+            });
         }); // /describe Immutable
 
         function makeSut () {
@@ -529,9 +585,9 @@
                     required: true
                 },
                 withSetter: {
-                    set: function(val, obj) {
-                        console.log('you set withSetter to: ' + val);
-                        obj.withSetter = val;
+                    set: {
+                        type: 'function',
+                        args: ['val', 'obj']
                     }
                 },
                 nested: new Immutable({
@@ -552,9 +608,9 @@
                         required: true
                     },
                     withSetter: {
-                        set: function(val, obj) {
-                            console.log('you set withSetter to: ' + val);
-                            obj.withSetter = val;
+                        set: {
+                            type: 'function',
+                            args: ['val', 'obj']
                         }
                     },
                     nested: new Immutable({
@@ -575,9 +631,9 @@
                             required: true
                         },
                         withSetter: {
-                            set: function(val, obj) {
-                                console.log('you set withSetter to: ' + val);
-                                obj.withSetter = val;
+                            set: {
+                                type: 'function',
+                                args: ['val', 'obj']
                             }
                         },
                         nested: {

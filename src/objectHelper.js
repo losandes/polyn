@@ -1,3 +1,4 @@
+/*jshint -W061*/ // (eval)
 (function () {
     'use strict';
 
@@ -77,13 +78,31 @@
             if (isDate(val)) {
                 // the best way to clone a date, is to create a new Date from it
                 return new Date(val);
+            } else if (isFunction(val)) {
+                return copyFunction(val);
             } else if (isObject(val)) {
-                // TODO: should we enumerate and recurse to ensure type consistency for nested dates?
-                // NOTE: we don't need it for the toObject usage, just for init
-                return JSON.parse(JSON.stringify(val));
+                return cloneObject(val, true);
             } else {
                 return JSON.parse(JSON.stringify(val));
             }
+        }
+
+        /*
+        // Make a copy of a function, ensuring it's not a reference
+        // @param func: The function to get a copy of
+        */
+        function copyFunction (func) {
+            var newFunc, prop;
+
+            eval('newFunc = ' + func.toString());
+
+            for(prop in func) {
+                if (func.hasOwnProperty(prop)) {
+                    newFunc[prop] = copyValue(func[prop]);
+                }
+            }
+
+            return newFunc;
         }
 
         /*
@@ -111,7 +130,7 @@
                     // this is NOT a deep clone, and we encountered an object that is NOT a date
                     newVals[propName] = null;
                 } else {
-                    newVals[propName] = copyValue(from[propName]);
+                    newVals[propName] = copyValue(from[propName], newVals);
                 }
             }
 
@@ -126,7 +145,7 @@
         // @param mergeVals: The new values to overwrite as we copy
         */
         function merge (from, mergeVals) {
-            var newVals = objectHelper.cloneObject(from, false),
+            var newVals = objectHelper.cloneObject(from),
                 propName;
 
             for (propName in mergeVals) {
@@ -147,6 +166,10 @@
         function isDate (val) {
             return typeof val === 'object' &&
                 Object.prototype.toString.call(val) === '[object Date]';
+        }
+
+        function isFunction (val) {
+            return typeof val === 'function';
         }
 
         function isObject (val) {
