@@ -566,6 +566,23 @@
                         done();
                     });
                 });
+
+                it('should return an error when the property is UNKNOWN', function () {
+                    // given
+                    var Sut = new Immutable({
+                        name: 'string',
+                        __skipValdation: true
+                    }),
+                    sut = new Sut({}),
+                    actual;
+
+                    // when
+                    actual = Sut.validateProperty(sut, 'asdfgsgfs');
+
+                    // then
+                    expect(Array.isArray(actual.errors)).to.equal(true);
+                    expect(actual.result).to.equal(false);
+                });
             });
 
             describe('when constructing an Immutable', function () {
@@ -583,6 +600,43 @@
 
                     // then
                     expect(sut.obj.name).to.equal('Trillian');
+                });
+            });
+
+            describe('when we retrieve the schema from an existing Immutable', function () {
+                it('should return a copy of the original schema', function () {
+                    // given
+                    var expected = {
+                            name: 'string',
+                            obj: 'object'
+                        },
+                        Sut = new Immutable(expected),
+                        actual,
+                        propName;
+
+                    // when
+                    actual = Sut.getSchema();
+
+                    for (propName in expected) {
+                        if (expected.hasOwnProperty(propName)) {
+                            expect(actual[propName]).to.equal(expected[propName]);
+                        }
+                    }
+                });
+
+                it('should NOT return a reference of the original schema', function () {
+                    // given
+                    var schema = {
+                            obj: 'object'
+                        },
+                        Sut = new Immutable(schema);
+
+                    // when
+                    var sut = Sut.getSchema();
+                    sut.obj = 'string';
+
+                    // then
+                    expect(Sut.getSchema().obj).to.equal('object');
                 });
             });
         }); // /describe Immutable

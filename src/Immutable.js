@@ -203,6 +203,13 @@
                 }
             };
 
+            /*
+            // Returns a copy of the original schema
+            */
+            Constructor.getSchema = function () {
+                return objectHelper.cloneObject(originalSchema);
+            };
+
             Constructor.__immutableCtor = true;
             return Constructor;
         } // /Immutable
