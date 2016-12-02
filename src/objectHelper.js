@@ -2,7 +2,10 @@
 (function () {
     'use strict';
 
-    var objectHelper = ObjectHelper();
+    var objectHelper = ObjectHelper(),
+        STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
+        ARGUMENT_NAMES = /([^\s,]+)/g,
+        FUNCTION_TEMPLATE = 'newFunc = function ({{args}}) { return that.apply(that, arguments); }';
 
     /*
     // Exports
@@ -92,17 +95,54 @@
         // @param func: The function to get a copy of
         */
         function copyFunction (func) {
-            var newFunc, prop;
+            var newFunc, that, prop;
 
-            eval('newFunc = ' + func.toString());
+            if (typeof func !== 'function') {
+                return func;
+            }
 
-            for(prop in func) {
-                if (func.hasOwnProperty(prop)) {
-                    newFunc[prop] = copyValue(func[prop]);
+            that = func.__clonedFrom || func;
+
+            // This is a safe use of eval - we're not executing the function
+            // itself, rather creating a clone that calls the original, and
+            // maintaining the argument names. This approach will pass
+            // Blueprint validation, remove direct access to the original
+            // function, and maintain scope.
+            eval(FUNCTION_TEMPLATE
+                    .replace(/{{args}}/, getArgumentNames(func).join(', '))
+            );
+
+            for(prop in that) {
+                if (that.hasOwnProperty(prop)) {
+                    newFunc[prop] = copyValue(that[prop]);
                 }
             }
 
+            newFunc.__clonedFrom = that;
+
             return newFunc;
+        }
+
+        /*
+        // Gets the argument names from a function and returns them in an array
+        // @param func: The function to get the argument names for
+        */
+        function getArgumentNames (func) {
+            var functionTxt, result;
+
+            if (typeof func !== 'function') {
+                return [];
+            }
+
+            functionTxt = func.toString().replace(STRIP_COMMENTS, '');
+            result = functionTxt.slice(functionTxt.indexOf('(') + 1, functionTxt.indexOf(')'))
+                .match(ARGUMENT_NAMES);
+
+            if (result === null) {
+                result = [];
+            }
+
+            return result;
         }
 
         /*
@@ -180,6 +220,7 @@
         setReadOnlyProperty(self, 'copyValue', copyValue);
         setReadOnlyProperty(self, 'cloneObject', cloneObject);
         setReadOnlyProperty(self, 'merge', merge);
+        setReadOnlyProperty(self, 'getArgumentNames', getArgumentNames);
 
         return self;
     }

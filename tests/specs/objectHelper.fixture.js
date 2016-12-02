@@ -59,7 +59,7 @@
                 it('should produce a function, when the given value is a function', function () {
                     // given
                     var expectedOutput = 'test';
-                    var expected = function() { return 'test'; };
+                    var expected = function() { return expectedOutput; };
 
                     // when
                     var actual = objectHelper.copyValue(expected);
