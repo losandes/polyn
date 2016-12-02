@@ -660,6 +660,25 @@
                         }
                     }
                 });
+
+                it('the blueprint should be Immutable', function () {
+                    // given
+                    var expected = {
+                            name: 'string',
+                            obj: 'object'
+                        },
+                        Sut = new Immutable(expected),
+                        propName;
+
+                    // when
+                    Sut.blueprint.props.name = 'number';
+
+                    for (propName in expected) {
+                        if (expected.hasOwnProperty(propName)) {
+                            expect(Sut.blueprint.props[propName]).to.equal(expected[propName]);
+                        }
+                    }
+                });
             });
 
         }); // /describe Immutable

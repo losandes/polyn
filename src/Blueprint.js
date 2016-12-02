@@ -368,7 +368,7 @@
                 if (prop === '__blueprintId') {
                     setReadOnlyProp(self, '__blueprintId', blueprint.__blueprintId);
                 } else if (Blueprint.isValidatableProperty(blueprint[prop])) {
-                    props[prop] = blueprint[prop];
+                    setReadOnlyProp(props, prop, blueprint[prop]);
                 } else {
                     hasInvalidProperties = true;
                     var err = new Exception(locale.errorTypes.invalidArgumentException, new Error(prop + ' is not validatable by Blueprint'));

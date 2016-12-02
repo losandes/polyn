@@ -1338,6 +1338,27 @@
                 });
             });
 
+            describe('when accessing the properties of a Blueprint', function () {
+                it('the properties on a blueprint should be Immutable', function () {
+                    // given
+                    var expected = {
+                            name: 'string',
+                            obj: 'object'
+                        },
+                        sut = new Blueprint(expected),
+                        propName;
+
+                    // when
+                    sut.props.name = 'number';
+
+                    for (propName in expected) {
+                        if (expected.hasOwnProperty(propName)) {
+                            expect(sut.props[propName]).to.equal(expected[propName]);
+                        }
+                    }
+                });                
+            });
+
         }); // /describe Blueprint
     } // /Spec
 
