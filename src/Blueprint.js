@@ -404,6 +404,13 @@
 
             setReadOnlyProp(self, 'hasInvalidProperties', hasInvalidProperties);
 
+            /*
+            // Returns a copy of the original blueprint/schema
+            */
+            setReadOnlyProp(self, 'getSchema', function () {
+                return objectHelper.cloneObject(blueprint);
+            });
+
             return self;
         };
 

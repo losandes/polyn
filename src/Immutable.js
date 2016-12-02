@@ -154,31 +154,31 @@
             // @param from: The Immutable to copy
             // @param mergeVals: The new values to overwrite as we copy
             */
-            Constructor.merge = function (from, mergeVals) {
+            setReadOnlyProp(Constructor, 'merge', function (from, mergeVals) {
                 return new Constructor(objectHelper.merge(from, mergeVals));
-            };
+            });
 
             /*
             // Copies the values of an Immutable to a plain JS Object
             // @param from: The Immutable to copy
             */
-            Constructor.toObject = function (from) {
+            setReadOnlyProp(Constructor, 'toObject', function (from) {
                 return objectHelper.cloneObject(from, {});
-            };
+            });
 
             /*
             // Validates an instance of an Immutable against it's schema
             // @param instance: The instance that is being validated
             */
-            Constructor.validate = function (instance, callback) {
+            setReadOnlyProp(Constructor, 'validate', function (instance, callback) {
                 return Blueprint.validate(blueprint, instance, callback);
-            };
+            });
 
             /*
             // Validates an instance of an Immutable against it's schema
             // @param instance: The instance that is being validated
             */
-            Constructor.validateProperty = function (instance, propertyName, callback) {
+            setReadOnlyProp(Constructor, 'validateProperty', function (instance, propertyName, callback) {
                 if (!instance && is.function(callback)) {
                     callback([locale.errors.validatePropertyInvalidArgs], false);
                 } else if (!instance) {
@@ -189,28 +189,33 @@
                 }
 
                 return Blueprint.validateProperty(blueprint, propertyName, instance[propertyName], callback);
-            };
+            });
 
             /*
             // Prints an immutable to the console, in a more readable way
             // @param instance: The Immutable to print
             */
-            Constructor.log = function (instance) {
+            setReadOnlyProp(Constructor, 'log', function (instance) {
                 if (!instance) {
                     console.log(null);
                 } else {
                     console.log(Constructor.toObject(instance));
                 }
-            };
+            });
 
             /*
             // Returns a copy of the original schema
             */
-            Constructor.getSchema = function () {
+            setReadOnlyProp(Constructor, 'getSchema', function () {
                 return objectHelper.cloneObject(originalSchema);
-            };
+            });
 
-            Constructor.__immutableCtor = true;
+            /*
+            // Returns a this Immutable's blueprint
+            */
+            setReadOnlyProp(Constructor, 'blueprint', blueprint);
+
+            setReadOnlyProp(Constructor, '__immutableCtor', true);
             return Constructor;
         } // /Immutable
 
@@ -268,6 +273,14 @@
         function InvalidArgumentException (error, messages) {
             return new Exception(locale.errorTypes.invalidArgumentException, error, messages);
         } // /InvalidArgumentException
+
+        function setReadOnlyProp (obj, name, val) {
+            objectHelper.setReadOnlyProperty(obj, name, val, function () {
+                var err = new Exception(locale.errorTypes.readOnlyViolation, new Error(name + ' is read-only'));
+                config.onError(err);
+                return err;
+            });
+        }
 
         /*
         // Confgure Immutable

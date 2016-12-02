@@ -639,6 +639,29 @@
                     expect(Sut.getSchema().obj).to.equal('object');
                 });
             });
+
+            describe('when we retrieve the Blueprint from an existing Immutable', function () {
+                it('should return the expected Blueprint', function () {
+                    // given
+                    var expected = {
+                            name: 'string',
+                            obj: 'object'
+                        },
+                        Sut = new Immutable(expected),
+                        actual,
+                        propName;
+
+                    // when
+                    actual = Sut.blueprint;
+
+                    for (propName in expected) {
+                        if (expected.hasOwnProperty(propName)) {
+                            expect(actual.props[propName]).to.equal(expected[propName]);
+                        }
+                    }
+                });
+            });
+
         }); // /describe Immutable
 
         function makeSut () {
