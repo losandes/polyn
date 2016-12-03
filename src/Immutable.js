@@ -21,7 +21,8 @@
             require('./Blueprint.js'),
             require('./Exception.js'),
             require('./objectHelper.js'),
-            require('./is.js')
+            require('./is.js'),
+            require('./async.js')
         );
     } else if (window) {
         if (
@@ -29,7 +30,8 @@
             !window.polyn.Blueprint ||
             !window.polyn.Exception ||
             !window.polyn.objectHelper ||
-            !window.polyn.is
+            !window.polyn.is ||
+            !window.polyn.async
         ) {
             return console.log('Unable to define module: LOADED OUT OF ORDER');
         }
@@ -38,7 +40,8 @@
             window.polyn.Blueprint,
             window.polyn.Exception,
             window.polyn.objectHelper,
-            window.polyn.is
+            window.polyn.is,
+            window.polyn.async
         );
 
         window.polyn.objectHelper.setReadOnlyProperty(window.polyn, 'Immutable', Immutable,
@@ -55,7 +58,7 @@
     /*
     // Immutable
     */
-    function Ctor(Blueprint, Exception, objectHelper, is) {
+    function Ctor(Blueprint, Exception, objectHelper, is, async) {
         var config = {
             onError: function (exception) {
                 console.log(exception);
@@ -154,8 +157,38 @@
             // @param from: The Immutable to copy
             // @param mergeVals: The new values to overwrite as we copy
             */
-            setReadOnlyProp(Constructor, 'merge', function (from, mergeVals) {
-                return new Constructor(objectHelper.merge(from, mergeVals));
+            setReadOnlyProp(Constructor, 'merge', function (from, mergeVals, callback) {
+                var performMerge = function (from, mergeVals, callback) {
+                    var mergedObj = objectHelper.merge(from, mergeVals),
+                        merged;
+
+                        if (mergedObj.isException) {
+                            return callback(mergedObj);
+                        }
+
+                        merged = new Constructor(mergedObj);
+
+                        if (merged.isException) {
+                            return callback(merged);
+                        } else {
+                            return callback(null, merged);
+                        }
+                };
+
+
+                if (typeof callback === 'function') {
+                    async.runAsync(function () {
+                        performMerge(from, mergeVals, callback);
+                    });
+                } else {
+                    var output;
+
+                    performMerge(from, mergeVals, function (err, merged) {
+                        output = err || merged;
+                    });
+
+                    return output;
+                }
             });
 
             /*

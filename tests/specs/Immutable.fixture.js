@@ -234,6 +234,31 @@
                         expect(actual.str).to.equal(expected.str);
                         expect(actual.num).to.equal(expected.num);
                     });
+
+                    it('(async) should create a new object letting the object values override values in the existing immutable', function (done) {
+                        // given
+                        var Sut = new Immutable({
+                                str: 'string',
+                                num: 'number'
+                            }),
+                            sut = new Sut({
+                                str: 'bar',
+                                num: 9
+                            }),
+                            expected = {
+                                str: 'foo',
+                                num: 20
+                            };
+
+                        // when
+                        Sut.merge(sut, expected, function (err, actual) {
+                            // then
+                            expect(actual.isException).to.equal(undefined);
+                            expect(actual.str).to.equal(expected.str);
+                            expect(actual.num).to.equal(expected.num);
+                            done();
+                        });
+                    });
                 });
 
                 describe('and the object is INVALID', function () {
@@ -259,6 +284,29 @@
                         // then
                         expect(actual.isException).to.equal(true);
                         expect(actual.type).to.equal('InvalidArgumentException');
+                    });
+
+                    it('should pass the error as the first arg to the callback', function () {
+                        // given
+                        var Sut = makeSut(),
+                            sut = new Sut({
+                                str: 'bar',
+                                num: 9,
+                                validated: 42,
+                                requiredProp: 'hello',
+                                withSetter: 'bar'
+                            }),
+                            expected = {
+                                str: 20,
+                                num: 'foo'
+                            };
+
+                        // when
+                        Sut.merge(sut, expected, function (err) {
+                            // then
+                            expect(err.isException).to.equal(true);
+                            expect(err.type).to.equal('InvalidArgumentException');
+                        });
                     });
                 });
 
