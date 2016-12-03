@@ -1,4 +1,4 @@
-/*! polyn 2016-12-02 */
+/*! polyn 2016-12-03 */
 (function() {
     "use strict";
     var async = Async();
@@ -38,7 +38,14 @@
 
 (function() {
     "use strict";
-    var objectHelper = ObjectHelper();
+    var objectHelper = ObjectHelper(), STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g, FUNCTION_TEMPLATE = "newFunc = function ({{args}}) { return that.apply(that, arguments); }", locale = {
+        errorTypes: {
+            invalidArgumentException: "InvalidArgumentException"
+        },
+        errors: {
+            cannotCopyFunction: "Valid values for the function argument are a function, null, or undefined"
+        }
+    };
     if (typeof module !== "undefined" && module.exports) {
         module.exports = objectHelper;
     } else if (window) {
@@ -93,14 +100,45 @@
             }
         }
         function copyFunction(func) {
-            var newFunc, prop;
-            eval("newFunc = " + func.toString());
-            for (prop in func) {
-                if (func.hasOwnProperty(prop)) {
-                    newFunc[prop] = copyValue(func[prop]);
+            var newFunc, that, prop;
+            if (func && typeof func !== "function") {
+                return {
+                    type: locale.errorTypes.invalidArgumentException,
+                    error: new Error(locale.errors.cannotCopyFunction),
+                    messages: [ locale.errors.cannotCopyFunction ],
+                    isException: true
+                };
+            } else if (!func) {
+                return func;
+            }
+            that = func.__clonedFrom || func;
+            eval(FUNCTION_TEMPLATE.replace(/{{args}}/, getArgumentNames(func).join(", ")));
+            for (prop in that) {
+                if (that.hasOwnProperty(prop)) {
+                    newFunc[prop] = copyValue(that[prop]);
                 }
             }
+            newFunc.__clonedFrom = that;
             return newFunc;
+        }
+        function getArgumentNames(func) {
+            var functionTxt, result;
+            if (func && typeof func !== "function") {
+                return {
+                    type: locale.errorTypes.invalidArgumentException,
+                    error: new Error(locale.errors.cannotCopyFunction),
+                    messages: [ locale.errors.cannotCopyFunction ],
+                    isException: true
+                };
+            } else if (!func) {
+                return [];
+            }
+            functionTxt = func.toString().replace(STRIP_COMMENTS, "");
+            result = functionTxt.slice(functionTxt.indexOf("(") + 1, functionTxt.indexOf(")")).match(ARGUMENT_NAMES);
+            if (result === null) {
+                result = [];
+            }
+            return result;
         }
         function cloneObject(from, deep) {
             var newVals = {}, propName;
@@ -148,6 +186,7 @@
         setReadOnlyProperty(self, "copyValue", copyValue);
         setReadOnlyProperty(self, "cloneObject", cloneObject);
         setReadOnlyProperty(self, "merge", merge);
+        setReadOnlyProperty(self, "getArgumentNames", getArgumentNames);
         return self;
     }
 })();

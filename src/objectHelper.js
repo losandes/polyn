@@ -5,7 +5,15 @@
     var objectHelper = ObjectHelper(),
         STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
         ARGUMENT_NAMES = /([^\s,]+)/g,
-        FUNCTION_TEMPLATE = 'newFunc = function ({{args}}) { return that.apply(that, arguments); }';
+        FUNCTION_TEMPLATE = 'newFunc = function ({{args}}) { return that.apply(that, arguments); }',
+        locale = {
+            errorTypes: {
+                invalidArgumentException: 'InvalidArgumentException'
+            },
+            errors: {
+                cannotCopyFunction: 'Valid values for the function argument are a function, null, or undefined'
+            }
+        };
 
     /*
     // Exports
@@ -97,15 +105,22 @@
         function copyFunction (func) {
             var newFunc, that, prop;
 
-            if (typeof func !== 'function') {
+            if (func && typeof func !== 'function') {
+                return {
+                    type: locale.errorTypes.invalidArgumentException,
+                    error: new Error(locale.errors.cannotCopyFunction),
+                    messages: [locale.errors.cannotCopyFunction],
+                    isException: true
+                };
+            } else if (!func) {
                 return func;
             }
 
             that = func.__clonedFrom || func;
 
             // This is a safe use of eval - we're not executing the function
-            // itself, rather creating a clone that calls the original, and
-            // maintaining the argument names. This approach will pass
+            // itself, rather creating a new function that calls the original,
+            // and maintaining the argument names. This approach will pass
             // Blueprint validation, remove direct access to the original
             // function, and maintain scope.
             eval(FUNCTION_TEMPLATE
@@ -130,7 +145,14 @@
         function getArgumentNames (func) {
             var functionTxt, result;
 
-            if (typeof func !== 'function') {
+            if (func && typeof func !== 'function') {
+                return {
+                    type: locale.errorTypes.invalidArgumentException,
+                    error: new Error(locale.errors.cannotCopyFunction),
+                    messages: [locale.errors.cannotCopyFunction],
+                    isException: true
+                };
+            } else if (!func) {
                 return [];
             }
 
