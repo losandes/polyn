@@ -156,6 +156,22 @@
                     expect((actual.date.getTime() - expectedTime) < 1000).to.equal(true);
                     expect(actual.nest).to.equal(null);
                 });
+
+                it('should have an optional async API', function (done) {
+                    // given
+                    var original = {
+                        name: 'test',
+                        description: 'foo'
+                    };
+
+                    // when
+                    objectHelper.cloneObject(original, true, function (err, actual) {
+                        // then
+                        expect(actual.name).to.equal(original.name);
+                        expect(actual.description).to.equal(original.description);
+                        done();
+                    });
+                });
             }); // /cloneObject
 
             describe('merge', function () {
@@ -248,6 +264,41 @@
                     expect(actual.nest.name).to.not.equal(one.nest.name);
                     expect(actual.nest.date).to.not.equal(two.nest.date);
                     expect(actual.nest.overridden).to.not.equal(two.nest.overridden);
+                });
+
+                it('should have an async API', function (done) {
+                    // given
+                    var expectedTime = new Date().getTime(),
+                        one = {
+                            name: 'test',
+                            overridden: 'never-seen',
+                            nest: {
+                                name: 'test',
+                                overridden: 'never-seen',
+                                func: function () { return 'test1'; }
+                            }
+                        }, two = {
+                            description: 'foo',
+                            overridden: 'overwritten!',
+                            nest: {
+                                date: new Date(expectedTime),
+                                overridden: 'overwritten!',
+                                func: function () { return 'test2'; }
+                            }
+                        };
+
+                    // when
+                    objectHelper.merge(one, two, function (err, actual) {
+                        // then
+                        expect(actual.name).to.equal(one.name);
+                        expect(actual.description).to.equal(two.description);
+                        expect(actual.overridden).to.equal(two.overridden);
+                        expect(actual.nest.name).to.equal(one.nest.name);
+                        expect(actual.nest.date.getTime()).to.equal(expectedTime);
+                        expect(actual.nest.overridden).to.equal(two.nest.overridden);
+                        expect(actual.nest.func()).to.equal('test2');
+                        done();
+                    });
                 });
             }); // /merge
 

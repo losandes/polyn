@@ -38,7 +38,7 @@
 
 (function() {
     "use strict";
-    var objectHelper = ObjectHelper(), STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g, FUNCTION_TEMPLATE = "newFunc = function ({{args}}) { return that.apply(that, arguments); }", locale = {
+    var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g, FUNCTION_TEMPLATE = "newFunc = function ({{args}}) { return that.apply(that, arguments); }", locale = {
         errorTypes: {
             invalidArgumentException: "InvalidArgumentException"
         },
@@ -47,9 +47,12 @@
         }
     };
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = objectHelper;
+        module.exports = new ObjectHelper(require("./async.js"));
     } else if (window) {
-        window.polyn = window.polyn || {};
+        if (!window.polyn || !window.polyn.async) {
+            return console.log("Unable to define module: LOADED OUT OF ORDER");
+        }
+        var objectHelper = new ObjectHelper(window.polyn.async);
         Object.defineProperty(window.polyn, "objectHelper", {
             get: function() {
                 return objectHelper;
@@ -65,7 +68,7 @@
     } else {
         console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
     }
-    function ObjectHelper() {
+    function ObjectHelper(async) {
         var self = {};
         function setReadOnlyProperty(obj, name, val, onError) {
             var defaultErrorMessage = "the {{name}} property is read-only".replace(/{{name}}/, name);
@@ -89,14 +92,23 @@
             if (!val) {
                 return val;
             }
-            if (isDate(val)) {
-                return new Date(val);
-            } else if (isFunction(val)) {
-                return copyFunction(val);
-            } else if (isObject(val)) {
-                return cloneObject(val, true);
-            } else {
-                return JSON.parse(JSON.stringify(val));
+            try {
+                if (isDate(val)) {
+                    return new Date(val);
+                } else if (isFunction(val)) {
+                    return copyFunction(val);
+                } else if (isObject(val)) {
+                    return syncCloneObject(val, true);
+                } else {
+                    return JSON.parse(JSON.stringify(val));
+                }
+            } catch (e) {
+                return {
+                    type: locale.errorTypes.invalidArgumentException,
+                    error: e,
+                    messages: [ e.message ],
+                    isException: true
+                };
             }
         }
         function copyFunction(func) {
@@ -121,7 +133,21 @@
             newFunc.__clonedFrom = that;
             return newFunc;
         }
-        function getArgumentNames(func) {
+        function getArgumentNames(func, callback) {
+            if (typeof callback === "function") {
+                async.runAsync(function() {
+                    var args = syncGetArgumentNames(func);
+                    if (args.isException) {
+                        callback(args);
+                    } else {
+                        callback(null, args);
+                    }
+                });
+            } else {
+                return syncGetArgumentNames(func);
+            }
+        }
+        function syncGetArgumentNames(func) {
             var functionTxt, result;
             if (func && typeof func !== "function") {
                 return {
@@ -140,7 +166,21 @@
             }
             return result;
         }
-        function cloneObject(from, deep) {
+        function cloneObject(from, deep, callback) {
+            if (typeof callback === "function") {
+                async.runAsync(function() {
+                    var cloned = syncCloneObject(from, deep);
+                    if (cloned.isException) {
+                        callback(cloned);
+                    } else {
+                        callback(null, cloned);
+                    }
+                });
+            } else {
+                return syncCloneObject(from, deep);
+            }
+        }
+        function syncCloneObject(from, deep) {
             var newVals = {}, propName;
             if (typeof deep === "undefined") {
                 deep = true;
@@ -150,17 +190,34 @@
                     continue;
                 }
                 if (deep && isObject(from[propName]) && !isDate(from[propName])) {
-                    newVals[propName] = cloneObject(from[propName]);
+                    newVals[propName] = syncCloneObject(from[propName]);
                 } else if (!deep && isObject(from[propName]) && !isDate(from[propName])) {
                     newVals[propName] = null;
                 } else {
                     newVals[propName] = copyValue(from[propName], newVals);
                 }
+                if (newVals[propName] && newVals[propName].isException) {
+                    return newVals[propName];
+                }
             }
             return newVals;
         }
-        function merge(from, mergeVals) {
-            var newVals = objectHelper.cloneObject(from), propName;
+        function merge(from, mergeVals, callback) {
+            if (typeof callback === "function") {
+                async.runAsync(function() {
+                    var merged = syncMerge(from, mergeVals);
+                    if (merged.isException) {
+                        callback(merged);
+                    } else {
+                        callback(null, merged);
+                    }
+                });
+            } else {
+                return syncMerge(from, mergeVals);
+            }
+        }
+        function syncMerge(from, mergeVals) {
+            var newVals = syncCloneObject(from), propName;
             for (propName in mergeVals) {
                 if (!mergeVals.hasOwnProperty(propName)) {
                     continue;
@@ -971,8 +1028,8 @@
                     return output;
                 }
             });
-            setReadOnlyProp(Constructor, "toObject", function(from) {
-                return objectHelper.cloneObject(from, {});
+            setReadOnlyProp(Constructor, "toObject", function(from, callback) {
+                return objectHelper.cloneObject(from, true, callback);
             });
             setReadOnlyProp(Constructor, "validate", function(instance, callback) {
                 return Blueprint.validate(blueprint, instance, callback);
@@ -995,8 +1052,8 @@
                     console.log(Constructor.toObject(instance));
                 }
             });
-            setReadOnlyProp(Constructor, "getSchema", function() {
-                return objectHelper.cloneObject(originalSchema);
+            setReadOnlyProp(Constructor, "getSchema", function(callback) {
+                return objectHelper.cloneObject(originalSchema, true, callback);
             });
             setReadOnlyProp(Constructor, "blueprint", blueprint);
             setReadOnlyProp(Constructor, "__immutableCtor", true);

@@ -709,6 +709,26 @@
                     // then
                     expect(Sut.getSchema().obj).to.equal('object');
                 });
+
+                it('should have an async API', function (done) {
+                    // given
+                    var expected = {
+                            name: 'string',
+                            obj: 'object'
+                        },
+                        Sut = new Immutable(expected),
+                        propName;
+
+                    // when
+                    Sut.getSchema(function (err, actual) {
+                        for (propName in expected) {
+                            if (expected.hasOwnProperty(propName)) {
+                                expect(actual[propName]).to.equal(expected[propName]);
+                            }
+                        }
+                        done();
+                    });
+                });
             });
 
             describe('when we retrieve the Blueprint from an existing Immutable', function () {
