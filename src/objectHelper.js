@@ -2,8 +2,7 @@
 (function () {
     'use strict';
 
-    var objectHelper = ObjectHelper(),
-        STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
+    var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
         ARGUMENT_NAMES = /([^\s,]+)/g,
         FUNCTION_TEMPLATE = 'newFunc = function ({{args}}) { return that.apply(that, arguments); }',
         locale = {
@@ -19,9 +18,21 @@
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = objectHelper;
+        module.exports = new ObjectHelper(
+            require('./async.js')
+        );
     } else if (window) {
-        window.polyn = window.polyn || {};
+        if (
+            !window.polyn ||
+            !window.polyn.async
+        ) {
+            return console.log('Unable to define module: LOADED OUT OF ORDER');
+        }
+
+        var objectHelper = new ObjectHelper(
+            window.polyn.async
+        );
+
         Object.defineProperty(window.polyn, 'objectHelper', {
             get: function () {
                 return objectHelper;
@@ -43,7 +54,7 @@
     /*
     // objectHelper
     */
-    function ObjectHelper () {
+    function ObjectHelper (async) {
         var self = {};
 
         /*
@@ -85,16 +96,24 @@
             if (!val) {
                 return val;
             }
-
-            if (isDate(val)) {
-                // the best way to clone a date, is to create a new Date from it
-                return new Date(val);
-            } else if (isFunction(val)) {
-                return copyFunction(val);
-            } else if (isObject(val)) {
-                return cloneObject(val, true);
-            } else {
-                return JSON.parse(JSON.stringify(val));
+            try {
+                if (isDate(val)) {
+                    // the best way to clone a date, is to create a new Date from it
+                    return new Date(val);
+                } else if (isFunction(val)) {
+                    return copyFunction(val);
+                } else if (isObject(val)) {
+                    return syncCloneObject(val, true);
+                } else {
+                    return JSON.parse(JSON.stringify(val));
+                }
+            } catch (e) {
+                return {
+                    type: locale.errorTypes.invalidArgumentException,
+                    error: e,
+                    messages: [e.message],
+                    isException: true
+                };
             }
         }
 
@@ -141,8 +160,29 @@
         /*
         // Gets the argument names from a function and returns them in an array
         // @param func: The function to get the argument names for
+        // @param callback: Optional async API
         */
-        function getArgumentNames (func) {
+        function getArgumentNames (func, callback) {
+            if (typeof callback === 'function') {
+                async.runAsync(function () {
+                    var args = syncGetArgumentNames(func);
+
+                    if (args.isException) {
+                        callback(args);
+                    } else {
+                        callback(null, args);
+                    }
+                });
+            } else {
+                return syncGetArgumentNames(func);
+            }
+        }
+
+        /*
+        // Gets the argument names from a function and returns them in an array
+        // @param func: The function to get the argument names for
+        */
+        function syncGetArgumentNames (func) {
             var functionTxt, result;
 
             if (func && typeof func !== 'function') {
@@ -171,8 +211,30 @@
         // Copies the values of an Immutable to a plain JS Object
         // @param from: The Immutable to copy
         // @param deep (default: true): Whether or not to recurse when objects are found
+        // @param callback: Optional async API
         */
-        function cloneObject (from, deep) {
+        function cloneObject (from, deep, callback) {
+            if (typeof callback === 'function') {
+                async.runAsync(function () {
+                    var cloned = syncCloneObject(from, deep);
+
+                    if (cloned.isException) {
+                        callback(cloned);
+                    } else {
+                        callback(null, cloned);
+                    }
+                });
+            } else {
+                return syncCloneObject(from, deep);
+            }
+        }
+
+        /*
+        // Copies the values of an Immutable to a plain JS Object
+        // @param from: The Immutable to copy
+        // @param deep (default: true): Whether or not to recurse when objects are found
+        */
+        function syncCloneObject (from, deep) {
             var newVals = {},
                 propName;
 
@@ -187,12 +249,17 @@
 
                 if (deep && isObject(from[propName]) && !isDate(from[propName])) {
                     // this is a deep clone, and we encountered an object - recurse
-                    newVals[propName] = cloneObject(from[propName]);
+                    newVals[propName] = syncCloneObject(from[propName]);
                 } else if (!deep && isObject(from[propName]) && !isDate(from[propName])) {
                     // this is NOT a deep clone, and we encountered an object that is NOT a date
                     newVals[propName] = null;
                 } else {
                     newVals[propName] = copyValue(from[propName], newVals);
+                }
+
+                if (newVals[propName] && newVals[propName].isException) {
+                    // stop processing on exception
+                    return newVals[propName];
                 }
             }
 
@@ -205,9 +272,33 @@
         // NOTE: This does not return an Immutable!
         // @param from: The Immutable to copy
         // @param mergeVals: The new values to overwrite as we copy
+        // @param callback: Optional async API
         */
-        function merge (from, mergeVals) {
-            var newVals = objectHelper.cloneObject(from),
+        function merge (from, mergeVals, callback) {
+            if (typeof callback === 'function') {
+                async.runAsync(function () {
+                    var merged = syncMerge(from, mergeVals);
+
+                    if (merged.isException) {
+                        callback(merged);
+                    } else {
+                        callback(null, merged);
+                    }
+                });
+            } else {
+                return syncMerge(from, mergeVals);
+            }
+        }
+
+        /*
+        // Makes a new Object from an existing Immutable, replacing
+        // values with the properties in the mergeVals argument
+        // NOTE: This does not return an Immutable!
+        // @param from: The Immutable to copy
+        // @param mergeVals: The new values to overwrite as we copy
+        */
+        function syncMerge (from, mergeVals) {
+            var newVals = syncCloneObject(from),
                 propName;
 
             for (propName in mergeVals) {

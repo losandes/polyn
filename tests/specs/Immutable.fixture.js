@@ -467,6 +467,29 @@
                     validateNest(actual.nested.nested, sut.nested.nested);
                     validateNest(actual.nested.nested.nested, sut.nested.nested.nested);
                 });
+
+                it('should also have an async API', function (done) {
+                    // given
+                    var Sut = new Immutable({
+                            prop1: 'string',
+                            prop2: 'string',
+                            prop3: 'string'
+                        }),
+                        sut = new Sut({
+                            prop1: 'foo',
+                            prop2: 'bar',
+                            prop3: 'hello'
+                        });
+
+                    // when
+                    Sut.toObject(sut, function (err, actual) {
+                        expect(err).to.equal(null);
+                        expect(actual.prop1).to.equal(sut.prop1);
+                        expect(actual.prop2).to.equal(sut.prop2);
+                        expect(actual.prop3).to.equal(sut.prop3);
+                        done();
+                    });
+                });
             });
 
             describe('when a Date property is present on the blueprint', function () {

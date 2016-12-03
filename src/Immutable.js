@@ -177,8 +177,8 @@
             // Copies the values of an Immutable to a plain JS Object
             // @param from: The Immutable to copy
             */
-            setReadOnlyProp(Constructor, 'toObject', function (from) {
-                return objectHelper.cloneObject(from, {});
+            setReadOnlyProp(Constructor, 'toObject', function (from, callback) {
+                return objectHelper.cloneObject(from, true, callback);
             });
 
             /*
@@ -221,8 +221,8 @@
             /*
             // Returns a copy of the original schema
             */
-            setReadOnlyProp(Constructor, 'getSchema', function () {
-                return objectHelper.cloneObject(originalSchema);
+            setReadOnlyProp(Constructor, 'getSchema', function (callback) {
+                return objectHelper.cloneObject(originalSchema, true, callback);
             });
 
             /*
