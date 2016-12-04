@@ -18,21 +18,24 @@
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = new ObjectHelper({
+        module.exports = new Factory({
             async: require('./async.js')
         });
     } else if (window && window.polyn) {
-        window.polyn.addModule('objectHelper', ['async'], ObjectHelper);
+        window.polyn.addModule('objectHelper', ['async'], Factory);
     } else {
         console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
+    }
+
+    function Factory (polyn) {
+        return new ObjectHelper(polyn.async);
     }
 
     /*
     // objectHelper
     */
-    function ObjectHelper (polyn) {
-        var self = {},
-            async = polyn.async;
+    function ObjectHelper (async) {
+        var self = {};
 
         /*
         // Adds a read-only property to the given object

@@ -8,7 +8,7 @@
         return err;
     };
     if (!window) {
-        return warn(new Error("Unable to define module: UNKNOWN RUNTIME"));
+        return warn(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME"));
     }
     Object.defineProperty(window, "polyn", {
         get: function() {
@@ -89,16 +89,19 @@
         }
     };
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = new ObjectHelper({
+        module.exports = new Factory({
             async: require("./async.js")
         });
     } else if (window && window.polyn) {
-        window.polyn.addModule("objectHelper", [ "async" ], ObjectHelper);
+        window.polyn.addModule("objectHelper", [ "async" ], Factory);
     } else {
         console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
-    function ObjectHelper(polyn) {
-        var self = {}, async = polyn.async;
+    function Factory(polyn) {
+        return new ObjectHelper(polyn.async);
+    }
+    function ObjectHelper(async) {
+        var self = {};
         function setReadOnlyProperty(obj, name, val, onError) {
             var defaultErrorMessage = "the {{name}} property is read-only".replace(/{{name}}/, name);
             Object.defineProperty(obj, name, {
@@ -542,7 +545,7 @@
 (function() {
     "use strict";
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = Ctor({
+        module.exports = Factory({
             async: require("./async.js"),
             id: require("./id.js"),
             is: require("./is.js"),
@@ -550,12 +553,15 @@
             objectHelper: require("./objectHelper.js")
         });
     } else if (window && window.polyn) {
-        window.polyn.addModule("Blueprint", [ "async", "id", "is", "Exception", "objectHelper" ], Ctor);
+        window.polyn.addModule("Blueprint", [ "async", "id", "is", "Exception", "objectHelper" ], Factory);
     } else {
         console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
-    function Ctor(polyn) {
-        var async = polyn.async, id = polyn.id, is = polyn.is, Exception = polyn.Exception, objectHelper = polyn.objectHelper, Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, validateRegExp, addValidationMemoryProperty, rememberValidation, isAlreadyValidated, dateIsBefore, dateIsAfter, makeErrorMessage, setReadOnlyProp, setDefaultCompatibility, setDefaultConfiguration, config = {}, versions = {
+    function Factory(polyn) {
+        return new Blueprint(polyn.async, polyn.id, polyn.is, polyn.Exception, polyn.objectHelper);
+    }
+    function Blueprint(async, id, is, Exception, objectHelper) {
+        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, validateRegExp, addValidationMemoryProperty, rememberValidation, isAlreadyValidated, dateIsBefore, dateIsAfter, makeErrorMessage, setReadOnlyProp, setDefaultCompatibility, setDefaultConfiguration, config = {}, versions = {
             v20161119: new Date("2016-11-19"),
             v20161120: new Date("2016-11-20")
         }, locale = {
@@ -941,7 +947,7 @@
         }
     };
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = Ctor({
+        module.exports = Factory({
             Blueprint: require("./Blueprint.js"),
             Exception: require("./Exception.js"),
             objectHelper: require("./objectHelper.js"),
@@ -949,12 +955,15 @@
             async: require("./async.js")
         });
     } else if (window && window.polyn) {
-        window.polyn.addModule("Immutable", [ "async", "Blueprint", "is", "Exception", "objectHelper" ], Ctor);
+        window.polyn.addModule("Immutable", [ "async", "Blueprint", "is", "Exception", "objectHelper" ], Factory);
     } else {
         console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
-    function Ctor(polyn) {
-        var Blueprint = polyn.Blueprint, Exception = polyn.Exception, objectHelper = polyn.objectHelper, is = polyn.is, async = polyn.async, config = {
+    function Factory(polyn) {
+        return new ImmutableFactory(polyn.Blueprint, polyn.Exception, polyn.objectHelper, polyn.is, polyn.async);
+    }
+    function ImmutableFactory(Blueprint, Exception, objectHelper, is, async) {
+        var config = {
             onError: function(exception) {
                 console.log(exception);
             }

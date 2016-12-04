@@ -16,7 +16,7 @@
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = Ctor({
+        module.exports = Factory({
             Blueprint: require('./Blueprint.js'),
             Exception: require('./Exception.js'),
             objectHelper: require('./objectHelper.js'),
@@ -24,21 +24,26 @@
             async: require('./async.js')
         });
     } else if (window && window.polyn) {
-        window.polyn.addModule('Immutable', ['async', 'Blueprint', 'is', 'Exception', 'objectHelper'], Ctor);
+        window.polyn.addModule('Immutable', ['async', 'Blueprint', 'is', 'Exception', 'objectHelper'], Factory);
     } else {
         console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
+    }
+
+    function Factory(polyn) {
+        return new ImmutableFactory(
+            polyn.Blueprint,
+            polyn.Exception,
+            polyn.objectHelper,
+            polyn.is,
+            polyn.async
+        );
     }
 
     /*
     // Immutable
     */
-    function Ctor(polyn) {
-        var Blueprint = polyn.Blueprint,
-            Exception = polyn.Exception,
-            objectHelper = polyn.objectHelper,
-            is = polyn.is,
-            async = polyn.async,
-            config = {
+    function ImmutableFactory(Blueprint, Exception, objectHelper, is, async) {
+        var config = {
                 onError: function (exception) {
                     console.log(exception);
                 }

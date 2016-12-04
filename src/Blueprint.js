@@ -5,7 +5,7 @@
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = Ctor({
+        module.exports = Factory({
             async: require('./async.js'),
             id: require('./id.js'),
             is: require('./is.js'),
@@ -13,21 +13,26 @@
             objectHelper: require('./objectHelper.js')
         });
     } else if (window && window.polyn) {
-        window.polyn.addModule('Blueprint', ['async', 'id', 'is', 'Exception', 'objectHelper'], Ctor);
+        window.polyn.addModule('Blueprint', ['async', 'id', 'is', 'Exception', 'objectHelper'], Factory);
     } else {
         console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
+    }
+
+    function Factory(polyn) {
+        return new Blueprint(
+            polyn.async,
+            polyn.id,
+            polyn.is,
+            polyn.Exception,
+            polyn.objectHelper
+        );
     }
 
     /*
     // Blueprint
     */
-    function Ctor(polyn) {
-        var async = polyn.async,
-            id = polyn.id,
-            is = polyn.is,
-            Exception = polyn.Exception,
-            objectHelper = polyn.objectHelper,
-            Blueprint,
+    function Blueprint(async, id, is, Exception, objectHelper) {
+        var Blueprint,
             signatureMatches,
             syncSignatureMatches,
             validateSignature,

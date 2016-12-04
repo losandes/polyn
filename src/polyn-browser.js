@@ -11,7 +11,7 @@
     };
 
     if (!window) {
-        return warn(new Error('Unable to define module: UNKNOWN RUNTIME'));
+        return warn(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME'));
     }
 
     Object.defineProperty(window, 'polyn', {
