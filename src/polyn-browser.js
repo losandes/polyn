@@ -1,4 +1,3 @@
-/*jshint -W061*/ // (eval)
 (function () {
     'use strict';
 
