@@ -1,31 +1,15 @@
 (function () {
     'use strict';
 
-    var is = Is();
-
     /*
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = is;
-    } else if (window) {
-        window.polyn = window.polyn || {};
-        Object.defineProperty(window.polyn, 'is', {
-            get: function () {
-                return is;
-            },
-            set: function () {
-                var err = new Error('[POLYN] polyn modules are read-only');
-                console.log(err);
-                return err;
-            },
-            // this property should show up when this object's property names are enumerated
-            enumerable: true,
-            // this property may not be deleted
-            configurable: false
-        });
+        module.exports = new Is();
+    } else if (window && window.polyn) {
+        window.polyn.addModule('is', null, Is);
     } else {
-        console.log('[POLYN] Unable to define module: UNKNOWN RUNTIME');
+        console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
     }
 
     /*

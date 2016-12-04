@@ -1,55 +1,33 @@
 (function () {
     'use strict';
 
-    var bp;
-
     /*
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = Ctor(
-            require('./async.js'),
-            require('./id.js'),
-            require('./is.js'),
-            require('./Exception.js'),
-            require('./objectHelper.js')
-        );
-    } else if (window) {
-        if (
-            !window.polyn ||
-            !window.polyn.async ||
-            !window.polyn.id ||
-            !window.polyn.is ||
-            !window.polyn.Exception ||
-            !window.polyn.objectHelper
-        ) {
-            return console.log('Unable to define module: LOADED OUT OF ORDER');
-        }
-
-        bp = Ctor(
-            window.polyn.async,
-            window.polyn.id,
-            window.polyn.is,
-            window.polyn.Exception,
-            window.polyn.objectHelper
-        );
-
-        window.polyn.objectHelper.setReadOnlyProperty(window.polyn, 'Blueprint', bp,
-            function () {
-                var err = new Error('[POLYN] polyn modules are read-only');
-                console.log(err);
-                return err;
-            }
-        );
+        module.exports = Ctor({
+            async: require('./async.js'),
+            id: require('./id.js'),
+            is: require('./is.js'),
+            Exception: require('./Exception.js'),
+            objectHelper: require('./objectHelper.js')
+        });
+    } else if (window && window.polyn) {
+        window.polyn.addModule('Blueprint', ['async', 'id', 'is', 'Exception', 'objectHelper'], Ctor);
     } else {
-        console.log('Unable to define module: UNKNOWN RUNTIME');
+        console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
     }
 
     /*
     // Blueprint
     */
-    function Ctor(async, id, is, Exception, objectHelper) {
-        var Blueprint,
+    function Ctor(polyn) {
+        var async = polyn.async,
+            id = polyn.id,
+            is = polyn.is,
+            Exception = polyn.Exception,
+            objectHelper = polyn.objectHelper,
+            Blueprint,
             signatureMatches,
             syncSignatureMatches,
             validateSignature,

@@ -18,44 +18,21 @@
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = new ObjectHelper(
-            require('./async.js')
-        );
-    } else if (window) {
-        if (
-            !window.polyn ||
-            !window.polyn.async
-        ) {
-            return console.log('Unable to define module: LOADED OUT OF ORDER');
-        }
-
-        var objectHelper = new ObjectHelper(
-            window.polyn.async
-        );
-
-        Object.defineProperty(window.polyn, 'objectHelper', {
-            get: function () {
-                return objectHelper;
-            },
-            set: function () {
-                var err = new Error('[POLYN] polyn modules are read-only');
-                console.log(err);
-                return err;
-            },
-            // this property should show up when this object's property names are enumerated
-            enumerable: true,
-            // this property may not be deleted
-            configurable: false
+        module.exports = new ObjectHelper({
+            async: require('./async.js')
         });
+    } else if (window && window.polyn) {
+        window.polyn.addModule('objectHelper', ['async'], ObjectHelper);
     } else {
-        console.log('[POLYN] Unable to define module: UNKNOWN RUNTIME');
+        console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
     }
 
     /*
     // objectHelper
     */
-    function ObjectHelper (async) {
-        var self = {};
+    function ObjectHelper (polyn) {
+        var self = {},
+            async = polyn.async;
 
         /*
         // Adds a read-only property to the given object

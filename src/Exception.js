@@ -13,24 +13,10 @@
     */
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = Exception;
-    } else if (window) {
-        window.polyn = window.polyn || {};
-        Object.defineProperty(window.polyn, 'Exception', {
-            get: function () {
-                return Exception;
-            },
-            set: function () {
-                var err = new Error('polyn modules are read-only');
-                console.log(err);
-                return err;
-            },
-            // this property should show up when this object's property names are enumerated
-            enumerable: true,
-            // this property may not be deleted
-            configurable: false
-        });
+    } else if (window && window.polyn) {
+        window.polyn.addModule('Exception', null, function () { return Exception; });
     } else {
-        console.log('Unable to define module: UNKNOWN RUNTIME');
+        console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
     }
 
     function normalizeType (type) {

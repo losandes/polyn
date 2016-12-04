@@ -1,25 +1,67 @@
-/*! polyn 2016-12-03 */
+/*! polyn 2016-12-04 */
+(function() {
+    "use strict";
+    var polyn = {}, warn;
+    warn = function(err) {
+        var log = console.warn || console.log;
+        log(err.message, err);
+        return err;
+    };
+    if (!window) {
+        return warn(new Error("Unable to define module: UNKNOWN RUNTIME"));
+    }
+    Object.defineProperty(window, "polyn", {
+        get: function() {
+            return polyn;
+        },
+        set: function() {
+            return warn(new Error("[POLYN] polyn modules are read-only"));
+        },
+        enumerable: true,
+        configurable: false
+    });
+    Object.defineProperty(polyn, "addModule", {
+        get: function() {
+            return addModule;
+        },
+        set: function() {
+            return warn(new Error("[POLYN] polyn modules are read-only"));
+        },
+        enumerable: true,
+        configurable: false
+    });
+    function addModule(name, dependencies, Factory) {
+        var i, singleton;
+        if (Array.isArray(dependencies)) {
+            for (i = 0; i < dependencies.length; i += 1) {
+                if (!polyn[dependencies[i]]) {
+                    return warn(new Error("[POLYN] Unable to define module: LOADED OUT OF ORDER"));
+                }
+            }
+        }
+        singleton = new Factory(polyn);
+        Object.defineProperty(polyn, name, {
+            get: function() {
+                return singleton;
+            },
+            set: function() {
+                return warn(new Error("[POLYN] polyn modules are read-only"));
+            },
+            enumerable: true,
+            configurable: false
+        });
+    }
+})();
+
 (function() {
     "use strict";
     var async = Async();
     if (typeof module !== "undefined" && module.exports) {
         module.exports = async;
-    } else if (window) {
-        window.polyn = window.polyn || {};
-        Object.defineProperty(window.polyn, "async", {
-            get: function() {
-                return async;
-            },
-            set: function() {
-                var err = new Error("[POLYN] polyn modules are read-only");
-                console.log(err);
-                return err;
-            },
-            enumerable: true,
-            configurable: false
-        });
+    } else if (window && window.polyn) {
+        window.polyn.addModule("async", null, Async);
     } else {
-        console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
+        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
     function Async() {
         var async = {
@@ -47,29 +89,16 @@
         }
     };
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = new ObjectHelper(require("./async.js"));
-    } else if (window) {
-        if (!window.polyn || !window.polyn.async) {
-            return console.log("Unable to define module: LOADED OUT OF ORDER");
-        }
-        var objectHelper = new ObjectHelper(window.polyn.async);
-        Object.defineProperty(window.polyn, "objectHelper", {
-            get: function() {
-                return objectHelper;
-            },
-            set: function() {
-                var err = new Error("[POLYN] polyn modules are read-only");
-                console.log(err);
-                return err;
-            },
-            enumerable: true,
-            configurable: false
+        module.exports = new ObjectHelper({
+            async: require("./async.js")
         });
+    } else if (window && window.polyn) {
+        window.polyn.addModule("objectHelper", [ "async" ], ObjectHelper);
     } else {
-        console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
+        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
-    function ObjectHelper(async) {
-        var self = {};
+    function ObjectHelper(polyn) {
+        var self = {}, async = polyn.async;
         function setReadOnlyProperty(obj, name, val, onError) {
             var defaultErrorMessage = "the {{name}} property is read-only".replace(/{{name}}/, name);
             Object.defineProperty(obj, name, {
@@ -250,25 +279,12 @@
 
 (function() {
     "use strict";
-    var id = Id();
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = id;
-    } else if (window) {
-        window.polyn = window.polyn || {};
-        Object.defineProperty(window.polyn, "id", {
-            get: function() {
-                return id;
-            },
-            set: function() {
-                var err = new Error("[POLYN] polyn modules are read-only");
-                console.log(err);
-                return err;
-            },
-            enumerable: true,
-            configurable: false
-        });
+        module.exports = new Id();
+    } else if (window && window.polyn) {
+        window.polyn.addModule("id", null, Id);
     } else {
-        console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
+        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
     function Id() {
         var id = {
@@ -296,25 +312,12 @@
 
 (function() {
     "use strict";
-    var is = Is();
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = is;
-    } else if (window) {
-        window.polyn = window.polyn || {};
-        Object.defineProperty(window.polyn, "is", {
-            get: function() {
-                return is;
-            },
-            set: function() {
-                var err = new Error("[POLYN] polyn modules are read-only");
-                console.log(err);
-                return err;
-            },
-            enumerable: true,
-            configurable: false
-        });
+        module.exports = new Is();
+    } else if (window && window.polyn) {
+        window.polyn.addModule("is", null, Is);
     } else {
-        console.log("[POLYN] Unable to define module: UNKNOWN RUNTIME");
+        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
     function Is() {
         var is = {
@@ -484,22 +487,12 @@
     };
     if (typeof module !== "undefined" && module.exports) {
         module.exports = Exception;
-    } else if (window) {
-        window.polyn = window.polyn || {};
-        Object.defineProperty(window.polyn, "Exception", {
-            get: function() {
-                return Exception;
-            },
-            set: function() {
-                var err = new Error("polyn modules are read-only");
-                console.log(err);
-                return err;
-            },
-            enumerable: true,
-            configurable: false
+    } else if (window && window.polyn) {
+        window.polyn.addModule("Exception", null, function() {
+            return Exception;
         });
     } else {
-        console.log("Unable to define module: UNKNOWN RUNTIME");
+        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
     function normalizeType(type) {
         return typeof type === "string" ? type : "Exception";
@@ -548,24 +541,21 @@
 
 (function() {
     "use strict";
-    var bp;
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = Ctor(require("./async.js"), require("./id.js"), require("./is.js"), require("./Exception.js"), require("./objectHelper.js"));
-    } else if (window) {
-        if (!window.polyn || !window.polyn.async || !window.polyn.id || !window.polyn.is || !window.polyn.Exception || !window.polyn.objectHelper) {
-            return console.log("Unable to define module: LOADED OUT OF ORDER");
-        }
-        bp = Ctor(window.polyn.async, window.polyn.id, window.polyn.is, window.polyn.Exception, window.polyn.objectHelper);
-        window.polyn.objectHelper.setReadOnlyProperty(window.polyn, "Blueprint", bp, function() {
-            var err = new Error("[POLYN] polyn modules are read-only");
-            console.log(err);
-            return err;
+        module.exports = Ctor({
+            async: require("./async.js"),
+            id: require("./id.js"),
+            is: require("./is.js"),
+            Exception: require("./Exception.js"),
+            objectHelper: require("./objectHelper.js")
         });
+    } else if (window && window.polyn) {
+        window.polyn.addModule("Blueprint", [ "async", "id", "is", "Exception", "objectHelper" ], Ctor);
     } else {
-        console.log("Unable to define module: UNKNOWN RUNTIME");
+        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
-    function Ctor(async, id, is, Exception, objectHelper) {
-        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, validateRegExp, addValidationMemoryProperty, rememberValidation, isAlreadyValidated, dateIsBefore, dateIsAfter, makeErrorMessage, setReadOnlyProp, setDefaultCompatibility, setDefaultConfiguration, config = {}, versions = {
+    function Ctor(polyn) {
+        var async = polyn.async, id = polyn.id, is = polyn.is, Exception = polyn.Exception, objectHelper = polyn.objectHelper, Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, validateRegExp, addValidationMemoryProperty, rememberValidation, isAlreadyValidated, dateIsBefore, dateIsAfter, makeErrorMessage, setReadOnlyProp, setDefaultCompatibility, setDefaultConfiguration, config = {}, versions = {
             v20161119: new Date("2016-11-19"),
             v20161120: new Date("2016-11-20")
         }, locale = {
@@ -940,7 +930,7 @@
 
 (function() {
     "use strict";
-    var Immutable, locale = {
+    var locale = {
         errorTypes: {
             invalidArgumentException: "InvalidArgumentException",
             readOnlyViolation: "ReadOnlyViolation"
@@ -951,22 +941,20 @@
         }
     };
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = Ctor(require("./Blueprint.js"), require("./Exception.js"), require("./objectHelper.js"), require("./is.js"), require("./async.js"));
-    } else if (window) {
-        if (!window.polyn || !window.polyn.Blueprint || !window.polyn.Exception || !window.polyn.objectHelper || !window.polyn.is || !window.polyn.async) {
-            return console.log("Unable to define module: LOADED OUT OF ORDER");
-        }
-        Immutable = Ctor(window.polyn.Blueprint, window.polyn.Exception, window.polyn.objectHelper, window.polyn.is, window.polyn.async);
-        window.polyn.objectHelper.setReadOnlyProperty(window.polyn, "Immutable", Immutable, function() {
-            var err = new Error("[POLYN] polyn modules are read-only");
-            console.log(err);
-            return err;
+        module.exports = Ctor({
+            Blueprint: require("./Blueprint.js"),
+            Exception: require("./Exception.js"),
+            objectHelper: require("./objectHelper.js"),
+            is: require("./is.js"),
+            async: require("./async.js")
         });
+    } else if (window && window.polyn) {
+        window.polyn.addModule("Immutable", [ "async", "Blueprint", "is", "Exception", "objectHelper" ], Ctor);
     } else {
-        console.log("Unable to define module: UNKNOWN RUNTIME");
+        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
-    function Ctor(Blueprint, Exception, objectHelper, is, async) {
-        var config = {
+    function Ctor(polyn) {
+        var Blueprint = polyn.Blueprint, Exception = polyn.Exception, objectHelper = polyn.objectHelper, is = polyn.is, async = polyn.async, config = {
             onError: function(exception) {
                 console.log(exception);
             }

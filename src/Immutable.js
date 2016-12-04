@@ -1,8 +1,7 @@
 (function () {
     'use strict';
 
-    var Immutable,
-        locale = {
+    var locale = {
             errorTypes: {
                 invalidArgumentException: 'InvalidArgumentException',
                 readOnlyViolation: 'ReadOnlyViolation'
@@ -17,53 +16,33 @@
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = Ctor(
-            require('./Blueprint.js'),
-            require('./Exception.js'),
-            require('./objectHelper.js'),
-            require('./is.js'),
-            require('./async.js')
-        );
-    } else if (window) {
-        if (
-            !window.polyn ||
-            !window.polyn.Blueprint ||
-            !window.polyn.Exception ||
-            !window.polyn.objectHelper ||
-            !window.polyn.is ||
-            !window.polyn.async
-        ) {
-            return console.log('Unable to define module: LOADED OUT OF ORDER');
-        }
-
-        Immutable = Ctor(
-            window.polyn.Blueprint,
-            window.polyn.Exception,
-            window.polyn.objectHelper,
-            window.polyn.is,
-            window.polyn.async
-        );
-
-        window.polyn.objectHelper.setReadOnlyProperty(window.polyn, 'Immutable', Immutable,
-            function () {
-                var err = new Error('[POLYN] polyn modules are read-only');
-                console.log(err);
-                return err;
-            }
-        );
+        module.exports = Ctor({
+            Blueprint: require('./Blueprint.js'),
+            Exception: require('./Exception.js'),
+            objectHelper: require('./objectHelper.js'),
+            is: require('./is.js'),
+            async: require('./async.js')
+        });
+    } else if (window && window.polyn) {
+        window.polyn.addModule('Immutable', ['async', 'Blueprint', 'is', 'Exception', 'objectHelper'], Ctor);
     } else {
-        console.log('Unable to define module: UNKNOWN RUNTIME');
+        console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
     }
 
     /*
     // Immutable
     */
-    function Ctor(Blueprint, Exception, objectHelper, is, async) {
-        var config = {
-            onError: function (exception) {
-                console.log(exception);
-            }
-        };
+    function Ctor(polyn) {
+        var Blueprint = polyn.Blueprint,
+            Exception = polyn.Exception,
+            objectHelper = polyn.objectHelper,
+            is = polyn.is,
+            async = polyn.async,
+            config = {
+                onError: function (exception) {
+                    console.log(exception);
+                }
+            };
 
         /*
         // Creates a Constructor for an Immutable object from a schema.

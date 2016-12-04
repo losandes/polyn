@@ -4,6 +4,7 @@ module.exports = function (grunt) {
 
     var banner = '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
         files = [
+            './src/polyn-browser.js',
             './src/async.js',
             './src/objectHelper.js',
             './src/id.js',

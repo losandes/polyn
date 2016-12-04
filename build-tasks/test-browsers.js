@@ -30,7 +30,7 @@ module.exports = function (grunt) {
             // see http://karma-runner.github.io/0.8/config/configuration-file.html
             basePath: './',
             frameworks: ['mocha', 'chai'],
-            files: makeFileArray(true),
+            files: makeFileArray(false),
             reporters: ['nyan'],
             reportSlowerThan: 2000,
             singleRun: true
