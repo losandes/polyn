@@ -772,6 +772,19 @@
                 });
             });
 
+            describe('when an array is present', function () {
+                it('should work', function () {
+                    var Sut = new Immutable({
+                            foo: 'array'
+                        }),
+                        sut = new Sut({
+                            foo: []
+                        });
+
+                    expect(Array.isArray(sut.foo)).to.equal(true);
+                });
+            });
+
         }); // /describe Immutable
 
         function makeSut () {

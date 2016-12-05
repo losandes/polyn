@@ -82,7 +82,7 @@
                     return new Date(val);
                 } else if (isFunction(val)) {
                     return copyFunction(val);
-                } else if (isObject(val)) {
+                } else if (isObject(val) && !Array.isArray(val)) {
                     return syncCloneObject(val, true);
                 } else {
                     return JSON.parse(JSON.stringify(val));

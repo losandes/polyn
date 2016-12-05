@@ -69,6 +69,19 @@
                     expect(Object.prototype.toString.call(actual)).to.equal('[object Function]');
                     expect(actual()).to.equal(expectedOutput);
                 });
+
+                it('should produce an array, when the given value is an array', function () {
+                    // given
+                    var expectedOutput = 'test';
+                    var expected = [expectedOutput];
+
+                    // when
+                    var actual = objectHelper.copyValue(expected);
+
+                    // then
+                    expect(Array.isArray(actual)).to.equal(true);
+                    expect(actual[0]).to.equal(expectedOutput);
+                });
             }); // /copyValue
 
             describe('cloneObject', function () {
