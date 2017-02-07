@@ -91,7 +91,7 @@
 
                     // then
                     expect(actual.isException).to.equal(true);
-                    expect(actual.messages[0].indexOf('InvalidSut') > -1).to.equal(true); 
+                    expect(actual.messages[0].indexOf('InvalidSut') > -1).to.equal(true);
                 });
             });
 
