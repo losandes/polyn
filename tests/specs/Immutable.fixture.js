@@ -78,19 +78,20 @@
             describe('when given an INVALID argument', function () {
                 it('should return an exception', function () {
                     // given
-                    var Sut = makeSut(), actual;
+                    var Sut = new Immutable({
+                            __blueprintId: 'InvalidSut',
+                            foo: 'string'
+                        }),
+                        actual;
 
                     // when
                     actual = new Sut({
-                        str: 9,
-                        num: 'bar',
-                        validated: 9,
-                        requiredProp: null,
-                        withSetter: 9
+                        str: 9
                     });
 
                     // then
                     expect(actual.isException).to.equal(true);
+                    expect(actual.messages[0].indexOf('InvalidSut') > -1).to.equal(true); 
                 });
             });
 

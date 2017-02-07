@@ -967,7 +967,7 @@
             onError: function(exception) {
                 console.log(exception);
             }
-        }, propertyBlacklist = [ "__blueprintId" ];
+        };
         function Immutable(originalSchema) {
             var schema = {}, blueprint, prop, propCtor;
             if (!originalSchema) {
@@ -975,8 +975,6 @@
             }
             for (prop in originalSchema) {
                 if (!originalSchema.hasOwnProperty(prop)) {
-                    continue;
-                } else if (propertyBlacklist.indexOf(prop) > -1) {
                     continue;
                 }
                 if (is.object(originalSchema[prop]) && !Blueprint.isValidatableProperty(originalSchema[prop]) && !originalSchema[prop].__immutableCtor) {
@@ -1001,6 +999,8 @@
                 try {
                     for (propName in schema) {
                         if (!schema.hasOwnProperty(propName)) {
+                            continue;
+                        } else if (propName === "__blueprintId") {
                             continue;
                         }
                         if (!values[propName]) {
