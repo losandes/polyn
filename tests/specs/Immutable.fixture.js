@@ -48,6 +48,31 @@
                     expect(actual.validated).to.equal(expected.validated);
                     expect(actual.requiredProp).to.equal(expected.requiredProp);
                 });
+
+                it('should NOT return the __blueprintId', function () {
+                    // given
+                    var Sut = new Immutable({
+                            __blueprintId: 'SUT',
+                            foo: 'string'
+                        }),
+                        actual,
+                        props = [],
+                        prop;
+
+                    // when
+                    actual = new Sut({ foo: 'bar' });
+
+                    // then
+                    for (prop in actual) {
+                        if (actual.hasOwnProperty(prop)) {
+                            props.push(prop);
+                        }
+                    }
+
+                    // then
+                    expect(actual.isException).to.equal(undefined);
+                    expect(props.indexOf('__blueprintId')).to.equal(-1);
+                });
             });
 
             describe('when given an INVALID argument', function () {

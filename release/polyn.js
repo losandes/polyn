@@ -1,4 +1,4 @@
-/*! polyn 2016-12-05 */
+/*! polyn 2017-02-06 */
 (function() {
     "use strict";
     var polyn = {}, warn;
@@ -967,7 +967,7 @@
             onError: function(exception) {
                 console.log(exception);
             }
-        };
+        }, propertyBlacklist = [ "__blueprintId" ];
         function Immutable(originalSchema) {
             var schema = {}, blueprint, prop, propCtor;
             if (!originalSchema) {
@@ -975,6 +975,8 @@
             }
             for (prop in originalSchema) {
                 if (!originalSchema.hasOwnProperty(prop)) {
+                    continue;
+                } else if (propertyBlacklist.indexOf(prop) > -1) {
                     continue;
                 }
                 if (is.object(originalSchema[prop]) && !Blueprint.isValidatableProperty(originalSchema[prop]) && !originalSchema[prop].__immutableCtor) {

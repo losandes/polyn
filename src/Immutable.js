@@ -47,7 +47,8 @@
                 onError: function (exception) {
                     console.log(exception);
                 }
-            };
+            },
+            propertyBlacklist = ['__blueprintId'];
 
         /*
         // Creates a Constructor for an Immutable object from a schema.
@@ -63,6 +64,8 @@
             // Convert any objects that aren't validatable by Blueprint into Immutables
             for (prop in originalSchema) {
                 if (!originalSchema.hasOwnProperty(prop)) {
+                    continue;
+                } else if (propertyBlacklist.indexOf(prop) > -1) {
                     continue;
                 }
 
