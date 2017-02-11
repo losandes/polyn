@@ -113,7 +113,7 @@
 
                 if (
                     // you can override initial validation by setting
-                    // `schema.__skipValdation: true`
+                    // `schema.__skipValidation: true`
                     originalSchema.__skipValidation !== true &&
                     !Blueprint.validate(blueprint, values).result
                 ) {
