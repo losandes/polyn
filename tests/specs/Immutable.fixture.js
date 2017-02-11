@@ -799,7 +799,7 @@
             });
 
             describe('when an array is present', function () {
-                it('should work', function () {
+                it('should return true when passed to Array.isArray', function () {
                     var Sut = new Immutable({
                             foo: 'array'
                         }),
@@ -823,7 +823,6 @@
                     expect(sut.foo.length).to.equal(0);
                 });
             });
-
         }); // /describe Immutable
 
         function makeSut () {
