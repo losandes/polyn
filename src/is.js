@@ -34,6 +34,7 @@
                 money: undefined,
                 decimal: undefined,
                 Window: undefined,
+                ObjectID: undefined,
                 not: {
                     defined: undefined,
                     function: undefined,
@@ -49,7 +50,8 @@
                     nullOrWhitespace: undefined,
                     money: undefined,
                     decimal: undefined,
-                    Window: undefined
+                    Window: undefined,
+                    ObjectID: undefined
                 }
             },
             class2Types = {},
@@ -218,6 +220,14 @@
 
         is.not.Window = function (obj) {
             return is.Window(obj) === false;
+        };
+
+        is.ObjectID = function (obj) {            
+            return is.defined(obj) && obj._bsontype === 'ObjectID';
+        };
+
+        is.not.ObjectID = function (obj) {
+            return is.ObjectID(obj) === false;
         };
 
         return is;

@@ -557,7 +557,8 @@
             'number',
             'object',
             'regexp',
-            'string'
+            'string',
+            'ObjectID'
         ];
 
         Blueprint.isValidatableProperty = function (obj) {

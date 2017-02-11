@@ -823,6 +823,23 @@
                     expect(sut.foo.length).to.equal(0);
                 });
             });
+
+            describe('when a Date is present', function () {
+                it('should not support date value mutation', function () {
+                    var date = new Date(),
+                        expectedYear = date.getYear(),
+                        Sut = new Immutable({
+                            foo: 'datetime'
+                        }),
+                        sut = new Sut({
+                            foo: date
+                        });
+
+                    sut.foo.setYear(2000);
+
+                    expect(sut.foo.getYear()).to.equal(expectedYear);
+                });
+            });
         }); // /describe Immutable
 
         function makeSut () {

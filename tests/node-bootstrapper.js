@@ -8,6 +8,7 @@ var chai = require('chai'),
     Blueprint = polyn.Blueprint,
     Immutable = polyn.Immutable,
     objectHelper = polyn.objectHelper,
+    ObjectID = require('bson').ObjectID,
     // is = require('../src/is.js'),
     // id = require('../src/id.js'),
     // async = require('../src/async.js'),
@@ -28,6 +29,6 @@ isFixture.run(is, describe, it, chai.expect);
 idFixture.run(id, describe, it, chai.expect);
 asyncFixture.run(async, describe, it);
 ExceptionFixture.run(Exception, describe, it, chai.expect);
-BlueprintFixture.run(Blueprint, id, is, describe, it, chai.expect, beforeEach, afterEach);
+BlueprintFixture.run(Blueprint, ObjectID, id, is, describe, it, chai.expect, beforeEach, afterEach);
 ImmutableFixture.run(Immutable, describe, it, chai.expect, beforeEach, afterEach);
 objectHelperFixture.run(objectHelper, describe, it, chai.expect);

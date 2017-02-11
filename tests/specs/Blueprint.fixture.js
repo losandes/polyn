@@ -15,7 +15,7 @@
         console.log('Unable to define module: UNKNOWN RUNTIME');
     }
 
-    function Spec (Blueprint, id, is, describe, it, expect, beforeEach, afterEach) {
+    function Spec (Blueprint, ObjectID, id, is, describe, it, expect, beforeEach, afterEach) {
         describe('Blueprint', function () {
             var sutSetup,
                 setDefaultConfiguration;
@@ -1250,6 +1250,45 @@
                 });
             });
 
+            if (ObjectID) {
+                describe('ObjectID', function () {
+                    describe('when the expected value type is an ObjectID', function () {
+                        it('should validate the value', function () {
+                            // given
+                            var bp = new Blueprint({
+                                __blueprintId: 'ObjectID',
+                                _id: 'ObjectID'
+                            });
+
+                            // when
+                            var actual = bp.validate({
+                                _id: new ObjectID()
+                            });
+
+                            // then
+                            expect(Array.isArray(actual.errors)).to.equal(false);
+                            expect(actual.result).to.equal(true);
+                        });
+
+                        it('should validate the value', function () {
+                            // given
+                            var bp = new Blueprint({
+                                _id: 'ObjectID'
+                            });
+
+                            // when
+                            var actual = bp.validate({
+                                _id: new ObjectID().toHexString()
+                            });
+
+                            // then
+                            expect(Array.isArray(actual.errors)).to.equal(true);
+                            expect(actual.result).to.equal(false);
+                        });
+                    });
+                });
+            }
+
             describe('when an unrecognized type is presented', function () {
                 it('should skip validation of those properties', function () {
                     // given
@@ -1356,7 +1395,7 @@
                             expect(sut.props[propName]).to.equal(expected[propName]);
                         }
                     }
-                });                
+                });
             });
 
         }); // /describe Blueprint

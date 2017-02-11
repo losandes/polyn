@@ -341,6 +341,7 @@
             money: undefined,
             decimal: undefined,
             Window: undefined,
+            ObjectID: undefined,
             not: {
                 defined: undefined,
                 function: undefined,
@@ -356,7 +357,8 @@
                 nullOrWhitespace: undefined,
                 money: undefined,
                 decimal: undefined,
-                Window: undefined
+                Window: undefined,
+                ObjectID: undefined
             }
         }, class2Types = {}, class2ObjTypes = [ "Boolean", "Number", "String", "Function", "Array", "Date", "RegExp", "Object" ], i, name;
         for (i = 0; i < class2ObjTypes.length; i += 1) {
@@ -476,6 +478,12 @@
         };
         is.not.Window = function(obj) {
             return is.Window(obj) === false;
+        };
+        is.ObjectID = function(obj) {
+            return is.defined(obj) && obj._bsontype === "ObjectID";
+        };
+        is.not.ObjectID = function(obj) {
+            return is.ObjectID(obj) === false;
         };
         return is;
     }
@@ -907,7 +915,7 @@
                 console.log(message);
             };
         };
-        Blueprint.types = [ "array", "blueprint", "bool", "boolean", "date", "datetime", "decimal", "expression", "function", "money", "nullOrWhitespace", "number", "object", "regexp", "string" ];
+        Blueprint.types = [ "array", "blueprint", "bool", "boolean", "date", "datetime", "decimal", "expression", "function", "money", "nullOrWhitespace", "number", "object", "regexp", "string", "ObjectID" ];
         Blueprint.isValidatableProperty = function(obj) {
             if (!obj) {
                 return false;
@@ -945,7 +953,7 @@
             initialValidationFailed: "The argument passed to the constructor is not valid",
             validatePropertyInvalidArgs: "To validate a property, you must provide the instance, and property name"
         }
-    };
+    }, mutatingArrayFunctions = [ "setPrototypeOf", "push", "pop", "sort", "splice", "shift", "unshift", "reverse" ], mutatingDateFunctions = [ "setPrototypeOf", "setDate", "setFullYear", "setHours", "setMilliseconds", "setMinutes", "setMonth", "setSeconds", "setTime", "setUTCDate", "setUTCFullYear", "setUTCHours", "setUTCMilliseconds", "setUTCMinutes", "setUTCMonth", "setUTCSeconds", "setYear" ];
     if (typeof module !== "undefined" && module.exports) {
         module.exports = Factory({
             Blueprint: require("./Blueprint.js"),
@@ -976,6 +984,8 @@
             for (prop in originalSchema) {
                 if (!originalSchema.hasOwnProperty(prop)) {
                     continue;
+                } else if (prop === "__skipValidation") {
+                    continue;
                 }
                 if (is.object(originalSchema[prop]) && !Blueprint.isValidatableProperty(originalSchema[prop]) && !originalSchema[prop].__immutableCtor) {
                     schema[prop] = new Immutable(originalSchema[prop]);
@@ -991,7 +1001,7 @@
             function Constructor(values) {
                 var propName, self = {};
                 values = values || {};
-                if (schema.__skipValdation !== true && !Blueprint.validate(blueprint, values).result) {
+                if (originalSchema.__skipValidation !== true && !Blueprint.validate(blueprint, values).result) {
                     var err = new InvalidArgumentException(new Error(locale.errors.initialValidationFailed), Blueprint.validate(blueprint, values).errors);
                     config.onError(err);
                     return err;
@@ -1059,13 +1069,17 @@
             return Constructor;
         }
         function makeImmutableProperty(self, schema, values, propName) {
+            var Model, mutatingFunctions, copy;
             if (schema[propName].__immutableCtor && is.function(schema[propName])) {
-                var Model = schema[propName];
+                Model = schema[propName];
                 objectHelper.setReadOnlyProperty(self, propName, new Model(values[propName]), makeSetHandler(propName));
-            } else if (Array.isArray(values[propName])) {
-                var newArr = objectHelper.copyValue(values[propName]);
-                newArr.push = makeSetHandler(propName);
-                objectHelper.setReadOnlyProperty(self, propName, newArr, makeSetHandler(propName));
+            } else if (Array.isArray(values[propName]) || isDate(values[propName])) {
+                mutatingFunctions = Array.isArray(values[propName]) ? mutatingArrayFunctions : mutatingDateFunctions;
+                copy = objectHelper.copyValue(values[propName]);
+                mutatingFunctions.forEach(function(func) {
+                    copy[func] = makeSetHandler(propName);
+                });
+                objectHelper.setReadOnlyProperty(self, propName, copy, makeSetHandler(propName));
             } else {
                 objectHelper.setReadOnlyProperty(self, propName, objectHelper.copyValue(values[propName]), makeSetHandler(propName));
             }
