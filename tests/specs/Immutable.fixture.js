@@ -541,12 +541,12 @@
                 expect(actual.date.getTime() - expected.date.getTime() < 1000).to.equal(true);
             });
 
-            describe('when __skipValdation is true', function () {
+            describe('when __skipValidation is true', function () {
                 it('should NOT validate objects upon construction', function () {
                     // given
                     var Sut = new Immutable({
                         name: 'string',
-                        __skipValdation: true
+                        __skipValidation: true
                     }), actual;
 
                     // when
@@ -562,7 +562,7 @@
                     // given
                     var Sut = new Immutable({
                         name: 'string',
-                        __skipValdation: true
+                        __skipValidation: true
                     }),
                     sut = new Sut({ name: 'Trillian' }),
                     actual;
@@ -579,7 +579,7 @@
                     // given
                     var Sut = new Immutable({
                         name: 'string',
-                        __skipValdation: true
+                        __skipValidation: true
                     }),
                     sut = new Sut({}),
                     actual;
@@ -596,7 +596,7 @@
                     // given
                     var Sut = new Immutable({
                         name: 'string',
-                        __skipValdation: true
+                        __skipValidation: true
                     }),
                     sut = new Sut({ name: 'Trillian' }),
                     actual;
@@ -616,7 +616,7 @@
                     // given
                     var Sut = new Immutable({
                         name: 'string',
-                        __skipValdation: true
+                        __skipValidation: true
                     }),
                     sut = new Sut({ name: 'Trillian' }),
                     actual;
@@ -633,7 +633,7 @@
                     // given
                     var Sut = new Immutable({
                         name: 'string',
-                        __skipValdation: true
+                        __skipValidation: true
                     }),
                     sut = new Sut({}),
                     actual;
@@ -650,7 +650,7 @@
                     // given
                     var Sut = new Immutable({
                         name: 'string',
-                        __skipValdation: true
+                        __skipValidation: true
                     }),
                     sut = new Sut({ name: 'Trillian' }),
                     actual;
@@ -668,7 +668,7 @@
                     // given
                     var Sut = new Immutable({
                         name: 'string',
-                        __skipValdation: true
+                        __skipValidation: true
                     }),
                     sut = new Sut({}),
                     actual;
@@ -687,7 +687,7 @@
                     // given
                     var Sut = new Immutable({
                             obj: 'object',
-                            __skipValdation: true
+                            __skipValidation: true
                         }),
                         reference = { obj: { name: 'Trillian' } },
                         sut = new Sut(reference);

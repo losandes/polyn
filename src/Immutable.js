@@ -75,7 +75,7 @@
             for (prop in originalSchema) {
                 if (!originalSchema.hasOwnProperty(prop)) {
                     continue;
-                } else if (prop === '__skipValdation') {
+                } else if (prop === '__skipValidation') {
                     continue;
                 }
 
@@ -114,7 +114,7 @@
                 if (
                     // you can override initial validation by setting
                     // `schema.__skipValdation: true`
-                    originalSchema.__skipValdation !== true &&
+                    originalSchema.__skipValidation !== true &&
                     !Blueprint.validate(blueprint, values).result
                 ) {
                     var err = new InvalidArgumentException(
