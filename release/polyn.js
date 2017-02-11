@@ -986,6 +986,8 @@
                     continue;
                 } else if (prop === "__skipValidation") {
                     continue;
+                } else if (prop === "__skipValdation") {
+                    schema.__skipValidation = originalSchema.skipValdation;
                 }
                 if (is.object(originalSchema[prop]) && !Blueprint.isValidatableProperty(originalSchema[prop]) && !originalSchema[prop].__immutableCtor) {
                     schema[prop] = new Immutable(originalSchema[prop]);

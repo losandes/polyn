@@ -77,6 +77,8 @@
                     continue;
                 } else if (prop === '__skipValidation') {
                     continue;
+                } else if (prop === '__skipValdation') {
+                    schema.__skipValidation = originalSchema.skipValdation;
                 }
 
                 if (
