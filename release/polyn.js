@@ -1,4 +1,4 @@
-/*! polyn 2017-02-06 */
+/*! polyn 2017-02-11 */
 (function() {
     "use strict";
     var polyn = {}, warn;
@@ -1062,6 +1062,10 @@
             if (schema[propName].__immutableCtor && is.function(schema[propName])) {
                 var Model = schema[propName];
                 objectHelper.setReadOnlyProperty(self, propName, new Model(values[propName]), makeSetHandler(propName));
+            } else if (Array.isArray(values[propName])) {
+                var newArr = objectHelper.copyValue(values[propName]);
+                newArr.push = makeSetHandler(propName);
+                objectHelper.setReadOnlyProperty(self, propName, newArr, makeSetHandler(propName));
             } else {
                 objectHelper.setReadOnlyProperty(self, propName, objectHelper.copyValue(values[propName]), makeSetHandler(propName));
             }
@@ -1097,6 +1101,9 @@
             } else {
                 return callback(null, merged);
             }
+        }
+        function isDate(val) {
+            return typeof val === "object" && Object.prototype.toString.call(val) === "[object Date]";
         }
         Immutable.configure = function(cfg) {
             cfg = cfg || {};

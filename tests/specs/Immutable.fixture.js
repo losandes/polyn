@@ -809,6 +809,19 @@
 
                     expect(Array.isArray(sut.foo)).to.equal(true);
                 });
+
+                it('should not support array value mutation', function () {
+                    var Sut = new Immutable({
+                            foo: 'array'
+                        }),
+                        sut = new Sut({
+                            foo: []
+                        });
+
+                    sut.foo.push('bar');
+
+                    expect(sut.foo.length).to.equal(0);
+                });
             });
 
         }); // /describe Immutable

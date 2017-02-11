@@ -10,7 +10,18 @@
                 initialValidationFailed: 'The argument passed to the constructor is not valid',
                 validatePropertyInvalidArgs: 'To validate a property, you must provide the instance, and property name'
             }
-        };
+        },
+        mutatingArrayFunctions = [
+            'setPrototypeOf', 'push', 'pop', 'sort', 'splice', 'shift',
+            'unshift', 'reverse'
+        ],
+        mutatingDateFunctions = [
+            'setPrototypeOf', 'setDate', 'setFullYear', 'setHours',
+            'setMilliseconds', 'setMinutes', 'setMonth', 'setSeconds',
+            'setTime', 'setUTCDate', 'setUTCFullYear', 'setUTCHours',
+            'setUTCMilliseconds', 'setUTCMinutes', 'setUTCMonth',
+            'setUTCSeconds', 'setYear'
+        ];
 
     /*
     // Exports
@@ -228,14 +239,33 @@
         // @param propName: The name of the property that is being written to this object
         */
         function makeImmutableProperty (self, schema, values, propName) {
+            var Model, mutatingFunctions, copy;
+
             if (schema[propName].__immutableCtor && is.function(schema[propName])) {
                 // this is a nested immutable
-                var Model = schema[propName];
+                Model = schema[propName];
 
                 objectHelper.setReadOnlyProperty(
                     self,
                     propName,
                     new Model(values[propName]),
+                    makeSetHandler(propName)
+                );
+            } else if (Array.isArray(values[propName]) || isDate(values[propName])) {
+                mutatingFunctions = Array.isArray(values[propName]) ?
+                    mutatingArrayFunctions : mutatingDateFunctions;
+                copy = objectHelper.copyValue(values[propName]);
+
+                mutatingFunctions.forEach(function (func) {
+                    // TODO: this breaks Liskov's Substitution Principle
+                    // It would be better to return a new copy of the Immutable
+                    copy[func] = makeSetHandler(propName);
+                });
+
+                objectHelper.setReadOnlyProperty(
+                    self,
+                    propName,
+                    copy,
                     makeSetHandler(propName)
                 );
             } else {
@@ -299,6 +329,13 @@
                 return callback(null, merged);
             }
         }
+
+        function isDate (val) {
+            return typeof val === 'object' &&
+                Object.prototype.toString.call(val) === '[object Date]';
+        }
+
+
 
         /*
         // Confgure Immutable
