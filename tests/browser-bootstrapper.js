@@ -22,7 +22,7 @@
 
     isFixture.run(is, describe, it, chai.expect);
     idFixture.run(id, describe, it, chai.expect);
-    asyncFixture.run(async, describe, it);
+    asyncFixture.run(async, describe, it, chai.expect);
     ExceptionFixture.run(Exception, describe, it, chai.expect);
     BlueprintFixture.run(Blueprint, null, id, is, describe, it, chai.expect, beforeEach, afterEach);
     ImmutableFixture.run(Immutable, describe, it, chai.expect, beforeEach, afterEach);
