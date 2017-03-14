@@ -138,7 +138,7 @@
                             continue;
                         }
 
-                        if (!values[propName]) {
+                        if (is.nullOrUndefined(values[propName])) {
                             makeReadOnlyNullProperty(self, propName);
                             continue;
                         }

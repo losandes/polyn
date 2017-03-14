@@ -73,6 +73,93 @@
                     expect(actual.isException).to.equal(undefined);
                     expect(props.indexOf('__blueprintId')).to.equal(-1);
                 });
+
+                it('should support all is/Blueprint types', function () {
+                    // given
+                    var Sut = new Immutable({
+                        num: 'number',
+                        str: 'string',
+                        arr: 'array',
+                        currency: 'money',
+                        bool: 'bool',
+                        boolean: 'boolean',
+                        date: 'datetime',
+                        regex: 'regexp',
+                        expression: /^[a-zA-Z]+$/,
+                        obj: 'object',
+                        func1: 'function',
+                        func2: {
+                            type: 'function',
+                            args: ['arg1', 'arg2']
+                        },
+                        dec2: {
+                            type: 'decimal',
+                            places: 2
+                        },
+                        dec3: {
+                            type: 'decimal',
+                            places: 3
+                        },
+                        nullable: {
+                            type: 'string',
+                            required: false
+                        },
+                        custom: {
+                            validate: function (val, errors) {
+                                if (val !== 42) {
+                                    errors.push('custom must be 42');
+                                }
+                            }
+                        }
+                    }), expected, actual;
+
+                    expected = {
+                        num: 42,
+                        str: 'string',
+                        arr: [1,2,3],
+                        currency: 42.42,
+                        bool: false,
+                        boolean: false,
+                        date: new Date(),
+                        regex: /[A-Za-z]/g,
+                        expression: 'Hello',
+                        obj: {
+                            foo: 'bar'
+                        },
+                        func1: function (num) { return num; },
+                        func2: function (arg1, arg2) {
+                            return arg1 + arg2;
+                        },
+                        dec2: 42.12,
+                        dec3: 42.123,
+                        nullable: null,
+                        custom: 42
+                    };
+
+                    // when
+                    actual = new Sut(expected);
+
+                    // then
+                    expect(actual.isException).to.equal(undefined);
+                    expect(actual.str).to.equal(expected.str);
+                    expect(actual.num).to.equal(expected.num);
+                    expect(actual.arr[0]).to.equal(expected.arr[0]);
+                    expect(actual.arr[1]).to.equal(expected.arr[1]);
+                    expect(actual.arr[3]).to.equal(expected.arr[3]);
+                    expect(actual.currency).to.equal(expected.currency);
+                    expect(actual.bool).to.equal(expected.bool);
+                    expect(actual.boolean).to.equal(expected.boolean);
+                    expect(actual.date.toISOString()).to.equal(expected.date.toISOString());
+                    expect(actual.expression).to.equal(expected.expression);
+                    expect('abc!@#'.match(actual.regex).length).to.equal('abc!@#'.match(expected.regex).length);
+                    expect(actual.obj.foo).to.equal(expected.obj.foo);
+                    expect(actual.func1(42)).to.equal(expected.func1(42));
+                    expect(actual.func2(1,2)).to.equal(expected.func2(1,2));
+                    expect(actual.dec2).to.equal(expected.dec2);
+                    expect(actual.dec3).to.equal(expected.dec3);
+                    expect(actual.nullable).to.equal(expected.nullable);
+                    expect(actual.custom).to.equal(expected.custom);
+                });
             });
 
             describe('when given an INVALID argument', function () {

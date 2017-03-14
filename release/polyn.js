@@ -1,4 +1,4 @@
-/*! polyn 2017-03-12 */
+/*! polyn 2017-03-14 */
 (function() {
     "use strict";
     var polyn = {}, warn;
@@ -191,6 +191,8 @@
                     return new Date(val);
                 } else if (isFunction(val)) {
                     return copyFunction(val);
+                } else if (isRegex(val)) {
+                    return new RegExp(val);
                 } else if (isObject(val) && !Array.isArray(val)) {
                     return syncCloneObject(val, true);
                 } else {
@@ -332,6 +334,9 @@
         }
         function isObject(val) {
             return typeof val === "object";
+        }
+        function isRegex(val) {
+            return val && val instanceof RegExp;
         }
         setReadOnlyProperty(self, "setReadOnlyProperty", setReadOnlyProperty);
         setReadOnlyProperty(self, "copyValue", copyValue);
@@ -1077,7 +1082,7 @@
                         } else if (propName === "__blueprintId") {
                             continue;
                         }
-                        if (!values[propName]) {
+                        if (is.nullOrUndefined(values[propName])) {
                             makeReadOnlyNullProperty(self, propName);
                             continue;
                         }
