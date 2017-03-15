@@ -142,17 +142,22 @@
                     });
                 });
 
-                it('should support a blocking option', function(){
+                it('should support a blocking option', function() {
                     var actual;
-                    async.waterfall([
-                        function (callback) { callback(null, 1); },
-                        function (num, callback) { callback(null, num + 1); },
-                        function (num, callback) { callback(null, num + 1); },
-                        function (num, callback) { callback(null, num + 1); },
-                        function (num, callback) { callback(null, num + 1); }
-                    ], { blocking: true }, function (err, num) {
-                        actual = num;
-                    });
+
+                    async.waterfall(
+                        [
+                            function (callback) { callback(null, 1); },
+                            function (num, callback) { callback(null, num + 1); },
+                            function (num, callback) { callback(null, num + 1); },
+                            function (num, callback) { callback(null, num + 1); },
+                            function (num, callback) { callback(null, num + 1); }
+                        ],
+                        { blocking: true },
+                        function (err, num) {
+                            actual = num;
+                        }
+                    );
 
                     expect(actual).to.equal(5);
                 });
