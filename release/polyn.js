@@ -1,4 +1,4 @@
-/*! polyn 2017-03-14 */
+/*! polyn 2017-03-15 */
 (function() {
     "use strict";
     var polyn = {}, warn;
@@ -55,57 +55,122 @@
 
 (function() {
     "use strict";
-    var async = Async();
+    var errorTypeWarning = "[POLYN] EXCEPTION WARNING: You should always pass an Error to Exception, to preserve your stack trace", config = {
+        onWarning: function(message) {
+            console.log(message);
+        }
+    };
     if (typeof module !== "undefined" && module.exports) {
-        module.exports = async;
+        module.exports = Exception;
     } else if (window && window.polyn) {
-        window.polyn.addModule("async", null, Async);
+        window.polyn.addModule("Exception", null, function() {
+            return Exception;
+        });
     } else {
         console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
     }
-    function Async() {
+    function normalizeType(type) {
+        return typeof type === "string" ? type : "Exception";
+    }
+    function normalizeError(type, error) {
+        if (typeof type === "object") {
+            return type;
+        }
+        var err = error;
+        if (typeof error === "string") {
+            config.onWarning(errorTypeWarning);
+            err = new Error(error);
+        } else if (!error) {
+            config.onWarning(errorTypeWarning);
+            err = new Error("UNKNOWN");
+        }
+        return err;
+    }
+    function normalizeMessages(error, messages) {
+        var msgs = [];
+        if (Array.isArray(messages)) {
+            msgs = messages;
+        } else if (messages) {
+            msgs.push(messages);
+        } else if (!messages && error && error.message) {
+            msgs.push(error.message);
+        }
+        return msgs;
+    }
+    function Exception(type, error, messages) {
+        var err = normalizeError(type, error);
+        return {
+            type: normalizeType(type),
+            error: err,
+            messages: normalizeMessages(err, messages),
+            isException: true
+        };
+    }
+    Exception.configure = function(cfg) {
+        cfg = cfg || {};
+        if (typeof cfg.onWarning === "function") {
+            config.onWarning = cfg.onWarning;
+        }
+    };
+})();
+
+(function() {
+    "use strict";
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = new Async(require("./Exception.js"));
+    } else if (window && window.polyn) {
+        window.polyn.addModule("async", [ "Exception" ], Factory);
+    } else {
+        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
+    }
+    function Factory(polyn) {
+        return new Async(polyn.Exception);
+    }
+    function Async(Exception) {
         var async = {
             runAsync: runAsync,
-            waterfall: waterfall
+            waterfall: waterfall,
+            syncWaterfall: syncWaterfall
         };
-        return async;
-    }
-    function runAsync(func, highPriority) {
-        if (highPriority === true && typeof process !== "undefined" && typeof process.nextTick === "function") {
-            process.nextTick(func);
-        } else {
-            setTimeout(func, 0);
+        function runAsync(func, highPriority) {
+            if (highPriority === true && typeof process !== "undefined" && typeof process.nextTick === "function") {
+                process.nextTick(func);
+            } else {
+                setTimeout(func, 0);
+            }
         }
-    }
-    function waterfall(tasks, callback) {
-        var idx = -1;
-        callback = once(callback || noop);
-        if (!Array.isArray(tasks)) {
-            return callback(new Error("The first argument to waterfall must be an array of functions"));
-        }
-        if (!tasks.length) {
-            return callback();
-        }
-        nextTask();
-        function nextTask() {
-            runAsyncTask(idx += 1, arguments);
-        }
-        function runAsyncTask(idx, originalArgs) {
-            runAsync(function() {
-                try {
-                    var err = originalArgs[0], args = makeArgArray(originalArgs);
-                    if (err) {
-                        return callback.apply(null, [ err ].concat(args));
-                    } else if (idx === tasks.length) {
-                        return callback.apply(null, [ null ].concat(args));
+        function waterfall(tasks, callback) {
+            var idx = -1;
+            callback = once(callback || noop);
+            if (!Array.isArray(tasks)) {
+                return callback(new Error("The first argument to waterfall must be an array of functions"));
+            }
+            if (!tasks.length) {
+                return callback();
+            }
+            nextTask();
+            function nextTask() {
+                runAsyncTask(idx += 1, arguments);
+            }
+            function runAsyncTask(idx, originalArgs) {
+                runAsync(function() {
+                    try {
+                        var err = originalArgs[0], args = makeArgArray(originalArgs);
+                        if (err) {
+                            return callback.apply(null, [ err ].concat(args));
+                        } else if (idx === tasks.length) {
+                            return callback.apply(null, [ null ].concat(args));
+                        }
+                        args.push(onlyOnce(nextTask));
+                        tasks[idx].apply(null, args);
+                    } catch (e) {
+                        return callback.apply(null, [ e ]);
                     }
-                    args.push(onlyOnce(nextTask));
-                    tasks[idx].apply(null, args);
-                } catch (e) {
-                    return callback.apply(null, [ e ]);
-                }
-            }, true);
+                }, true);
+            }
         }
+        function syncWaterfall(tasks) {}
+        return async;
     }
     function once(func) {
         return function() {
@@ -554,67 +619,6 @@
         };
         return is;
     }
-})();
-
-(function() {
-    "use strict";
-    var errorTypeWarning = "[POLYN] EXCEPTION WARNING: You should always pass an Error to Exception, to preserve your stack trace", config = {
-        onWarning: function(message) {
-            console.log(message);
-        }
-    };
-    if (typeof module !== "undefined" && module.exports) {
-        module.exports = Exception;
-    } else if (window && window.polyn) {
-        window.polyn.addModule("Exception", null, function() {
-            return Exception;
-        });
-    } else {
-        console.log(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED"));
-    }
-    function normalizeType(type) {
-        return typeof type === "string" ? type : "Exception";
-    }
-    function normalizeError(type, error) {
-        if (typeof type === "object") {
-            return type;
-        }
-        var err = error;
-        if (typeof error === "string") {
-            config.onWarning(errorTypeWarning);
-            err = new Error(error);
-        } else if (!error) {
-            config.onWarning(errorTypeWarning);
-            err = new Error("UNKNOWN");
-        }
-        return err;
-    }
-    function normalizeMessages(error, messages) {
-        var msgs = [];
-        if (Array.isArray(messages)) {
-            msgs = messages;
-        } else if (messages) {
-            msgs.push(messages);
-        } else if (!messages && error && error.message) {
-            msgs.push(error.message);
-        }
-        return msgs;
-    }
-    function Exception(type, error, messages) {
-        var err = normalizeError(type, error);
-        return {
-            type: normalizeType(type),
-            error: err,
-            messages: normalizeMessages(err, messages),
-            isException: true
-        };
-    }
-    Exception.configure = function(cfg) {
-        cfg = cfg || {};
-        if (typeof cfg.onWarning === "function") {
-            config.onWarning = cfg.onWarning;
-        }
-    };
 })();
 
 (function() {

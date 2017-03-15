@@ -15,7 +15,7 @@
         console.log('Unable to define module: UNKNOWN RUNTIME');
     }
 
-    function Spec (async, describe, it, expect) {
+    function Spec (async, describe, it, xit, expect) {
         describe('async', function () {
 
             describe('when runAsync is executed', function () {
@@ -26,7 +26,7 @@
                         done();
                     });
                 });
-            });
+            }); // /runAsync
 
             describe('when runAsync is executed with the highPriority flag', function () {
                 it('should execute the callback asynchronously', function (done) {
@@ -36,7 +36,7 @@
                         done();
                     }, true);
                 });
-            });
+            }); // /runAsync
 
             describe('when waterfall is executed', function () {
                 it('should execute each task', function (done) {
@@ -142,7 +142,78 @@
                     });
                 });
 
-            });
+            }); // /waterfall
+
+            describe('when syncWaterfall is executed', function () {
+                it('should execute each task', function () {
+                    // when
+                    var actual = async.syncWaterfall([
+                        function (callback) { callback(null, 1); },
+                        function (num, callback) { callback(null, 2); },
+                        function (num, callback) { callback(null, 3); },
+                        function (num, callback) { callback(null, 4); },
+                        function (num, callback) { callback(null, 5); }
+                    ]);
+
+                    expect(actual.isException).to.equal(undefined);
+                    expect(actual).to.equal(5);
+                });
+
+                it('should return the value if only 1 argument exists', function () {
+                    // when
+                    var actual = async.syncWaterfall([
+                        function (callback) { callback(null, 1); }
+                    ]);
+
+                    expect(actual.isException).to.equal(undefined);
+                    expect(actual).to.equal(1);
+                });
+
+                it('should return an array of values if more than 1 argument exists', function () {
+                    // when
+                    var actual = async.syncWaterfall([
+                        function (callback) { callback(null, 1, 2, 3); }
+                    ]);
+
+                    expect(actual.isException).to.equal(undefined);
+                    expect(actual[0]).to.equal(1);
+                    expect(actual[1]).to.equal(2);
+                    expect(actual[2]).to.equal(3);
+                });
+
+                it('should should short circuit if an error is presented', function () {
+                    // when
+                    var actual = async.syncWaterfall([
+                        function (callback) { callback(new Error('test')); },
+                        function (callback) {
+                            console.log('FAIL: should should short circuit if an error is presented');
+                            expect(true).to.equal(false);
+                            callback();
+                        },
+                    ]);
+
+                    expect(actual.isException).to.equal(true);
+                    expect(actual.error.message).to.equal('test');
+                });
+
+                it('should require an array as the first arg', function () {
+                    var actual = async.syncWaterfall({});
+                    expect(actual.isException).to.equal(true);
+                    expect(actual.error.message).to.equal('The first argument to waterfall must be an array of functions');
+                });
+
+                it('should present an error if a callback is executed more than once', function () {
+                    // when
+                    var actual = async.syncWaterfall([
+                        function (callback) { callback(null, 1); callback(); },
+                        function (num, callback) { callback(null, 2); }
+                    ]);
+
+                    expect(actual.isException).to.equal(true);
+                    expect(actual.error.message).to.equal('Callback was already called.');
+                });
+
+            }); // /syncWaterfall
 
         }); // /describe async
     } // /Spec

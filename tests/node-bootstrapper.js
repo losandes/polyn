@@ -27,7 +27,7 @@ var chai = require('chai'),
 
 isFixture.run(is, describe, it, chai.expect);
 idFixture.run(id, describe, it, chai.expect);
-asyncFixture.run(async, describe, it, chai.expect);
+asyncFixture.run(async, describe, it, xit, chai.expect);
 ExceptionFixture.run(Exception, describe, it, chai.expect);
 BlueprintFixture.run(Blueprint, ObjectID, id, is, describe, it, chai.expect, beforeEach, afterEach);
 ImmutableFixture.run(Immutable, describe, it, chai.expect, beforeEach, afterEach);

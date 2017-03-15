@@ -120,7 +120,7 @@
                         currency: 42.42,
                         bool: false,
                         boolean: false,
-                        date: new Date(),
+                        date: new Date('2017-03-05T13:36:51.000Z'),
                         regex: /[A-Za-z]/g,
                         expression: 'Hello',
                         obj: {
