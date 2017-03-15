@@ -1,7 +1,7 @@
 {
     "name": "polyn",
     "main": "release/polyn.min.js",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "homepage": "https://github.com/losandes/polyn",
     "authors": [
         "&y <andes.collab@gmail.com>"
