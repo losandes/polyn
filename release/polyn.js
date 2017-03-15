@@ -116,6 +116,13 @@
 
 (function() {
     "use strict";
+    var locale = {
+        errorTypes: {
+            INVALID_ARGUMENT_EXCEPTION: "InvalidArgumentException",
+            INNER_TASK_ERR: "InnerTaskError",
+            CAUGHT_TASK_ERR: "CaughtTaskError"
+        }
+    };
     if (typeof module !== "undefined" && module.exports) {
         module.exports = new Async(require("./Exception.js"));
     } else if (window && window.polyn) {
@@ -169,7 +176,34 @@
                 }, true);
             }
         }
-        function syncWaterfall(tasks) {}
+        function syncWaterfall(tasks) {
+            var idx = -1, finalValue;
+            if (!Array.isArray(tasks) || !tasks.length) {
+                return new Exception(locale.errorTypes.INVALID_ARGUMENT_EXCEPTION, new Error("The first argument to waterfall must be an array of functions"));
+            }
+            nextTask();
+            function nextTask() {
+                executeTask(idx += 1, arguments);
+            }
+            function executeTask(idx, originalArgs) {
+                try {
+                    var err = originalArgs[0], args = makeArgArray(originalArgs);
+                    if (err) {
+                        finalValue = new Exception(locale.errorTypes.INNER_TASK_ERR, err);
+                        return;
+                    } else {
+                        finalValue = args && args.length === 1 ? args[0] : args;
+                    }
+                    if (typeof tasks[idx] === "function") {
+                        args.push(onlyOnce(nextTask));
+                        tasks[idx].apply(null, args);
+                    }
+                } catch (e) {
+                    finalValue = new Exception(locale.errorTypes.CAUGHT_TASK_ERR, e);
+                }
+            }
+            return finalValue;
+        }
         return async;
     }
     function once(func) {
