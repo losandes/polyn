@@ -1,41 +1,26 @@
 (function () {
     'use strict';
 
-    var locale = {
-        errorTypes: {
-            INVALID_ARGUMENT_EXCEPTION: 'InvalidArgumentException',
-            INNER_TASK_ERR: 'InnerTaskError',
-            CAUGHT_TASK_ERR: 'CaughtTaskError'
-        }
-    };
+    var async = Async();
 
     /*
     // Exports
     */
     if (typeof module !== 'undefined' && module.exports) {
-        module.exports = new Async(
-            require('./Exception.js')
-        );
+        module.exports = async;
     } else if (window && window.polyn) {
-        window.polyn.addModule('async', ['Exception'], Factory);
+        window.polyn.addModule('async', null, Async);
     } else {
         console.log(new Error('[POLYN] Unable to define module: UNKNOWN RUNTIME or POLYN NOT DEFINED'));
-    }
-
-    function Factory(polyn) {
-        return new Async(
-            polyn.Exception
-        );
     }
 
     /*
     // async
     */
-    function Async (Exception) {
+    function Async () {
         var async = {
             runAsync: runAsync,
-            waterfall: waterfall,
-            syncWaterfall: syncWaterfall
+            waterfall: waterfall
         };
 
         //////////////////////////////////
@@ -52,9 +37,16 @@
             }
         }
 
-        function waterfall (tasks, callback) {
+        function waterfall (tasks, options, callback) {
             var idx = -1;
-            callback = once(callback || noop);
+
+            if (typeof options === 'function') {
+                callback = once(options || noop);
+                options = { blocking: false };
+            } else {
+                callback = once(callback || noop);
+                options = options || {};
+            }
 
             if (!Array.isArray(tasks)) {
                 return callback(new Error('The first argument to waterfall must be an array of functions'));
@@ -71,7 +63,7 @@
             }
 
             function runAsyncTask (idx, originalArgs) {
-                runAsync(function () {
+                optionalAsync(function () {
                     try {
                         var err = originalArgs[0],
                             args = makeArgArray(originalArgs);
@@ -89,53 +81,14 @@
                     }
                 }, true);
             }
-        }
 
-        function syncWaterfall (tasks) {
-            var idx = -1, finalValue;
-
-            if (!Array.isArray(tasks) || !tasks.length) {
-                return new Exception(
-                    locale.errorTypes.INVALID_ARGUMENT_EXCEPTION,
-                    new Error('The first argument to waterfall must be an array of functions')
-                );
-            }
-
-            nextTask();
-
-            function nextTask () {
-                executeTask(idx += 1, arguments);
-            }
-
-            function executeTask (idx, originalArgs) {
-                try {
-                    var err = originalArgs[0],
-                        args = makeArgArray(originalArgs);
-
-                    if (err) {
-                        finalValue = new Exception(
-                            locale.errorTypes.INNER_TASK_ERR,
-                            err
-                        );
-
-                        return;
-                    } else {
-                        finalValue = args && args.length === 1 ? args [0] : args;
-                    }
-
-                    if (typeof tasks[idx] === 'function') {
-                        args.push(onlyOnce(nextTask));
-                        tasks[idx].apply(null, args);
-                    }
-                } catch (e) {
-                    finalValue = new Exception(
-                        locale.errorTypes.CAUGHT_TASK_ERR,
-                        e
-                    );
+            function optionalAsync (func) {
+                if (options.blocking) {
+                    func();
+                } else {
+                    runAsync(func, true);
                 }
             }
-
-            return finalValue;
         }
 
         return async;
