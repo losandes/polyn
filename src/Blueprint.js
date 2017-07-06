@@ -284,7 +284,11 @@
         */
         addValidationMemoryProperty = function (implementation) {
             if (config.rememberValidation) {
-                implementation[config.memoryPropertName] = implementation[config.memoryPropertName] || {};
+                try {
+                    implementation[config.memoryPropertName] = implementation[config.memoryPropertName] || {};
+                } catch (e) {
+                    // swallow
+                }
             }
 
             return implementation;
@@ -295,7 +299,11 @@
         */
         rememberValidation = function (implementation, blueprint) {
             if (config.rememberValidation) {
-                implementation[config.memoryPropertName][blueprint.__blueprintId] = true;
+                try {
+                    implementation[config.memoryPropertName][blueprint.__blueprintId] = true;
+                } catch (e) {
+                    // swallow
+                }
             }
 
             return implementation;

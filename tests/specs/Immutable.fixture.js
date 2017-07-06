@@ -905,7 +905,10 @@
                             foo: []
                         });
 
-                    sut.foo.push('bar');
+                    try {
+                        sut.foo.push('bar');
+                    } catch (e) {}
+
 
                     expect(sut.foo.length).to.equal(0);
                 });

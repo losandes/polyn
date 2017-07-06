@@ -10,18 +10,7 @@
                 initialValidationFailed: 'The argument passed to the constructor is not valid',
                 validatePropertyInvalidArgs: 'To validate a property, you must provide the instance, and property name'
             }
-        },
-        mutatingArrayFunctions = [
-            'setPrototypeOf', 'push', 'pop', 'sort', 'splice', 'shift',
-            'unshift', 'reverse'
-        ],
-        mutatingDateFunctions = [
-            'setPrototypeOf', 'setDate', 'setFullYear', 'setHours',
-            'setMilliseconds', 'setMinutes', 'setMonth', 'setSeconds',
-            'setTime', 'setUTCDate', 'setUTCFullYear', 'setUTCHours',
-            'setUTCMilliseconds', 'setUTCMinutes', 'setUTCMonth',
-            'setUTCSeconds', 'setYear'
-        ];
+        };
 
     /*
     // Exports
@@ -145,6 +134,8 @@
 
                         makeImmutableProperty(self, schema, values, propName);
                     }
+
+                    Object.freeze(self);
                 } catch (e) {
                     return new InvalidArgumentException(e);
                 }
@@ -243,35 +234,24 @@
         // @param propName: The name of the property that is being written to this object
         */
         function makeImmutableProperty (self, schema, values, propName) {
-            var Model, mutatingFunctions, copy;
+            var Model, dateCopy;
 
             if (schema[propName].__immutableCtor && is.function(schema[propName])) {
                 // this is a nested immutable
                 Model = schema[propName];
+                self[propName] = new Model(values[propName]);
+            } else if (isDate(values[propName])) {
+                dateCopy = new Date(values[propName].getTime());
 
-                objectHelper.setReadOnlyProperty(
-                    self,
-                    propName,
-                    new Model(values[propName]),
-                    makeSetHandler(propName)
-                );
-            } else if (Array.isArray(values[propName]) || isDate(values[propName])) {
-                mutatingFunctions = Array.isArray(values[propName]) ?
-                    mutatingArrayFunctions : mutatingDateFunctions;
-                copy = objectHelper.copyValue(values[propName]);
-
-                mutatingFunctions.forEach(function (func) {
-                    // TODO: this breaks Liskov's Substitution Principle
-                    // It would be better to return a new copy of the Immutable
-                    copy[func] = makeSetHandler(propName);
+                Object.defineProperty(self, propName, {
+                    get: function () {
+                        return new Date(dateCopy.getTime());
+                    },
+                    enumerable: true,
+                    configurable: false
                 });
 
-                objectHelper.setReadOnlyProperty(
-                    self,
-                    propName,
-                    copy,
-                    makeSetHandler(propName)
-                );
+                Object.freeze(self[propName]);
             } else {
                 objectHelper.setReadOnlyProperty(
                     self,
@@ -279,6 +259,10 @@
                     objectHelper.copyValue(values[propName]),
                     makeSetHandler(propName)
                 );
+
+                if (Array.isArray(values[propName])) {
+                    Object.freeze(self[propName]);
+                }
             }
         } // /makeImmutableProperty
 
