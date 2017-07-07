@@ -87,8 +87,6 @@
                 } else if (isObject(val) && !Array.isArray(val)) {
                     return syncCloneObject(val, true);
                 } else {
-                    // TODO: for arrays and dates, we need to disable
-                    // the mutation features (i.e. push)
                     return JSON.parse(JSON.stringify(val));
                 }
             } catch (e) {

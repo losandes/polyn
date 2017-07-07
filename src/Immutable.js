@@ -241,11 +241,11 @@
                 Model = schema[propName];
                 self[propName] = new Model(values[propName]);
             } else if (isDate(values[propName])) {
-                dateCopy = new Date(values[propName].getTime());
+                dateCopy = new Date(values[propName]);
 
                 Object.defineProperty(self, propName, {
                     get: function () {
-                        return new Date(dateCopy.getTime());
+                        return new Date(dateCopy);
                     },
                     enumerable: true,
                     configurable: false
@@ -256,7 +256,9 @@
                 objectHelper.setReadOnlyProperty(
                     self,
                     propName,
+                    // TODO: is it really necessary to clone the value if it isn't an object?
                     objectHelper.copyValue(values[propName]),
+                    // typeof values[propName] === 'object' ? objectHelper.copyValue(values[propName]) : values[propName],
                     makeSetHandler(propName)
                 );
 

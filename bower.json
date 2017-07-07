@@ -1,6 +1,6 @@
 {
     "name": "polyn",
-    "main": "release/polyn.min.js",
+    "main": "release/polyn.js",
     "version": "1.10.0",
     "homepage": "https://github.com/losandes/polyn",
     "authors": [
