@@ -15,7 +15,7 @@
         "blueprint",
         "hilary",
         "immutables",
-        "immutability",
+        "immutability"
     ],
     "license": "MIT",
     "ignore": [
