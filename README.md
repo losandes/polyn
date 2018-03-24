@@ -34,7 +34,7 @@ Then add a script tag:
 Then it will be available on the window:
 
 ```JavaScript
-var polyn = window.polyn;
+window.polyn;
 ```
 
 ## Blueprint
