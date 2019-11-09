@@ -2,7 +2,7 @@
 
 (function() {
     "use strict";
-    const warn = function(err) {
+    var warn = function(err) {
         var log = console.warn || console.log;
         log(err.message, err);
         return err;
