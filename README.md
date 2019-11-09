@@ -1,5 +1,6 @@
-polyn
-=====
+# polyn (DEPRECATED)
+
+> This package is deprecated. It has been refactored into new libraries, which you should use instead: [@polyn/blueprint](https://github.com/losandes/polyn-blueprint), and [@polyn/immutable](https://github.com/losandes/polyn-immutable)
 
 polyn is a collection of Node and browser compatible JavaScript utilities that focus on polymorphism.
 

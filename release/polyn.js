@@ -1,8 +1,8 @@
-/*! polyn 2017-03-15 */
+/*! polyn 2019-11-09 */
+
 (function() {
     "use strict";
-    var polyn = {}, warn;
-    warn = function(err) {
+    const warn = function(err) {
         var log = console.warn || console.log;
         log(err.message, err);
         return err;
@@ -10,27 +10,8 @@
     if (!window) {
         return warn(new Error("[POLYN] Unable to define module: UNKNOWN RUNTIME"));
     }
-    Object.defineProperty(window, "polyn", {
-        get: function() {
-            return polyn;
-        },
-        set: function() {
-            return warn(new Error("[POLYN] polyn modules are read-only"));
-        },
-        enumerable: true,
-        configurable: false
-    });
-    Object.defineProperty(polyn, "addModule", {
-        get: function() {
-            return addModule;
-        },
-        set: function() {
-            return warn(new Error("[POLYN] polyn modules are read-only"));
-        },
-        enumerable: true,
-        configurable: false
-    });
-    function addModule(name, dependencies, Factory) {
+    window.polyn = window.polyn || {};
+    window.polyn.addModule = function addModule(name, dependencies, Factory) {
         var i, singleton;
         if (Array.isArray(dependencies)) {
             for (i = 0; i < dependencies.length; i += 1) {
@@ -50,7 +31,7 @@
             enumerable: true,
             configurable: false
         });
-    }
+    };
 })();
 
 (function() {
@@ -816,13 +797,17 @@
         };
         addValidationMemoryProperty = function(implementation) {
             if (config.rememberValidation) {
-                implementation[config.memoryPropertName] = implementation[config.memoryPropertName] || {};
+                try {
+                    implementation[config.memoryPropertName] = implementation[config.memoryPropertName] || {};
+                } catch (e) {}
             }
             return implementation;
         };
         rememberValidation = function(implementation, blueprint) {
             if (config.rememberValidation) {
-                implementation[config.memoryPropertName][blueprint.__blueprintId] = true;
+                try {
+                    implementation[config.memoryPropertName][blueprint.__blueprintId] = true;
+                } catch (e) {}
             }
             return implementation;
         };
@@ -1035,7 +1020,7 @@
             initialValidationFailed: "The argument passed to the constructor is not valid",
             validatePropertyInvalidArgs: "To validate a property, you must provide the instance, and property name"
         }
-    }, mutatingArrayFunctions = [ "setPrototypeOf", "push", "pop", "sort", "splice", "shift", "unshift", "reverse" ], mutatingDateFunctions = [ "setPrototypeOf", "setDate", "setFullYear", "setHours", "setMilliseconds", "setMinutes", "setMonth", "setSeconds", "setTime", "setUTCDate", "setUTCFullYear", "setUTCHours", "setUTCMilliseconds", "setUTCMinutes", "setUTCMonth", "setUTCSeconds", "setYear" ];
+    };
     if (typeof module !== "undefined" && module.exports) {
         module.exports = Factory({
             Blueprint: require("./Blueprint.js"),
@@ -1103,6 +1088,7 @@
                         }
                         makeImmutableProperty(self, schema, values, propName);
                     }
+                    Object.freeze(self);
                 } catch (e) {
                     return new InvalidArgumentException(e);
                 }
@@ -1153,19 +1139,25 @@
             return Constructor;
         }
         function makeImmutableProperty(self, schema, values, propName) {
-            var Model, mutatingFunctions, copy;
+            var Model, dateCopy;
             if (schema[propName].__immutableCtor && is.function(schema[propName])) {
                 Model = schema[propName];
-                objectHelper.setReadOnlyProperty(self, propName, new Model(values[propName]), makeSetHandler(propName));
-            } else if (Array.isArray(values[propName]) || isDate(values[propName])) {
-                mutatingFunctions = Array.isArray(values[propName]) ? mutatingArrayFunctions : mutatingDateFunctions;
-                copy = objectHelper.copyValue(values[propName]);
-                mutatingFunctions.forEach(function(func) {
-                    copy[func] = makeSetHandler(propName);
+                self[propName] = new Model(values[propName]);
+            } else if (isDate(values[propName])) {
+                dateCopy = new Date(values[propName]);
+                Object.defineProperty(self, propName, {
+                    get: function() {
+                        return new Date(dateCopy);
+                    },
+                    enumerable: true,
+                    configurable: false
                 });
-                objectHelper.setReadOnlyProperty(self, propName, copy, makeSetHandler(propName));
+                Object.freeze(self[propName]);
             } else {
                 objectHelper.setReadOnlyProperty(self, propName, objectHelper.copyValue(values[propName]), makeSetHandler(propName));
+                if (Array.isArray(values[propName])) {
+                    Object.freeze(self[propName]);
+                }
             }
         }
         function makeReadOnlyNullProperty(self, propName) {
