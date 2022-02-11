@@ -32,7 +32,7 @@
     "grunt-karma": "~3.0.2",
     "grunt-mocha": "~1.2.0",
     "grunt-mocha-test": "~0.13.3",
-    "karma": "~4.4.1",
+    "karma": "~6.3.14",
     "karma-chai": "~0.1.0",
     "karma-chrome-launcher": "~3.1.0",
     "karma-firefox-launcher": "~1.2.0",
