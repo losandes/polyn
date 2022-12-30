@@ -42,7 +42,7 @@
     "karma-nyan-reporter": "~0.2.5",
     "karma-phantomjs-launcher": "~1.0.4",
     "karma-safari-launcher": "~1.0.0",
-    "mocha": "~6.2.2",
+    "mocha": "~10.2.0",
     "phantomjs": "~2.1.7"
   }
 }
